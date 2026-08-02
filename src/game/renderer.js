@@ -72,7 +72,16 @@ export function createRenderer(svgElement) {
         (exit) => exit.remove(),
       );
 
-    invaders.attr('transform', (invader) => `translate(${invader.x}, ${invader.y})`);
+    invaders
+      .classed('is-diving', (invader) => Boolean(invader.diving))
+      .attr('transform', (invader) => {
+        if (!invader.diving) return `translate(${invader.x}, ${invader.y})`;
+
+        const angle = Math.max(-28, Math.min(28, invader.velocityX * 0.14));
+        const centerX = invader.x + invader.width / 2;
+        const centerY = invader.y + invader.height / 2;
+        return `translate(${centerX}, ${centerY}) rotate(${angle}) translate(${-invader.width / 2}, ${-invader.height / 2})`;
+      });
   }
 
   function renderBullets(state) {

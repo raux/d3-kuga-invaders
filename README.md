@@ -7,6 +7,7 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Responsive, resolution-independent SVG playfield
 - Keyboard, touch-button, and finger-drag controls with responsive phone and landscape layouts
 - Five-row enemy formation with edge reversal and descent
+- Random kamikaze dive attacks that break formation and target the player
 - Player and enemy projectiles with collision detection
 - Score, persistent high score, lives, levels, pause, and restart
 - Increasing speed and firing pressure across endless waves

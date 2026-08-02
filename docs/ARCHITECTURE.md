@@ -21,25 +21,25 @@ The renderer never writes to game state. This boundary keeps core rules runnable
 The top-level state contains:
 
 - Session: `mode`, `score`, `highScore`, `lives`, `level`, and elapsed time
-- Timers: player cooldown, enemy firing, and player invulnerability
+- Timers: player cooldown, enemy firing, dive scheduling, and player invulnerability
 - Formation: horizontal direction and level-dependent base speed
-- Entities: player, invaders, and two projectile collections
+- Entities: player, formation/diving invaders, and two projectile collections
 - Identity: a monotonic counter for dynamically created entities
 
 Invader IDs derive from level, row, and column. Projectile IDs derive from the session counter. Stable IDs ensure D3 updates the intended SVG node rather than matching by array position.
 
 ## Simulation
 
-`stepGame(state, deltaSeconds, input, random)` is the main simulation entry point. The optional random function makes enemy-shot selection controllable in tests.
+`stepGame(state, deltaSeconds, input, random)` is the main simulation entry point. The optional random function makes enemy-shot and dive selection controllable in tests.
 
 The update order is intentional:
 
 1. Clamp the frame delta and update timers.
 2. Move and constrain the player.
-3. Spawn an eligible player projectile.
-4. move the formation and projectiles.
-5. Resolve player and enemy collisions.
-6. Detect a landed fleet.
+3. Spawn eligible player projectiles and dive attacks.
+4. Move the formation, diving invaders, and projectiles.
+5. Resolve projectile, diving-enemy, and player collisions.
+6. Remove missed divers and detect a landed formation.
 7. Spawn an enemy projectile when its timer expires.
 8. Advance a cleared level.
 9. Recalculate the high score.
@@ -52,7 +52,7 @@ The SVG uses a `960 × 640` logical coordinate system and scales through `viewBo
 
 Static layers (stars and defense line) are constructed once. Dynamic layers use D3 joins:
 
-- Invaders: keyed `<g>` elements composed from SVG primitives
+- Invaders: keyed `<g>` elements composed from SVG primitives, with rotated dive styling
 - Projectiles: keyed `<rect>` elements
 - Player: one persistent `<g>` with transform and visibility updates
 

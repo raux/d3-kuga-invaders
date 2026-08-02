@@ -1,4 +1,4 @@
-import { INVADERS, PLAYER, WORLD } from './config.js';
+import { DIVES, INVADERS, PLAYER, WORLD } from './config.js';
 
 export function createInvaderFormation(level = 1) {
   const invaders = [];
@@ -33,6 +33,7 @@ export function createInitialState(highScore = 0) {
     nextEntityId: 1,
     playerShotTimer: 0,
     enemyShotTimer: 1,
+    diveTimer: DIVES.initialDelay,
     invulnerabilityTimer: 0,
     formation: {
       direction: 1,

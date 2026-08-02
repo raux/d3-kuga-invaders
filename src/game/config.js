@@ -29,6 +29,19 @@ export const INVADERS = Object.freeze({
   floorY: 548,
 });
 
+export const DIVES = Object.freeze({
+  initialDelay: 3.5,
+  minInterval: 2.2,
+  maxInterval: 4.6,
+  intervalLevelReduction: 0.12,
+  verticalSpeed: 210,
+  speedPerLevel: 12,
+  maxVerticalSpeed: 420,
+  maxHorizontalSpeed: 380,
+  levelsPerExtraDiver: 3,
+  maxActive: 3,
+});
+
 export const BULLETS = Object.freeze({
   playerWidth: 4,
   playerHeight: 18,

@@ -119,6 +119,12 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 .invader-row-0 { color: var(--rose); }
 .invader-row-1, .invader-row-2 { color: var(--amber); }
 .invader-row-3, .invader-row-4 { color: var(--cyan); }
+.invader.is-diving {
+  color: #ffedf4;
+  filter: url('#soft-glow') drop-shadow(0 8px 8px rgba(255, 107, 155, 0.72));
+}
+.invader.is-diving .invader-shell { fill: var(--rose); }
+.invader.is-diving .invader-eye { fill: #fff4a8; }
 
 .player-ship { color: var(--mint); filter: url('#soft-glow'); }
 .player-ship path { fill: currentColor; }

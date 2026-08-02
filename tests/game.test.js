@@ -12,6 +12,7 @@ describe('game state', () => {
     expect(state.invaders).toHaveLength(INVADERS.rows * INVADERS.columns);
     expect(state.mode).toBe('ready');
     expect(state.lives).toBe(PLAYER.startingLives);
+    expect(state.diveTimer).toBeGreaterThan(0);
   });
 
   it('starts a new running game while preserving the high score', () => {
@@ -42,6 +43,83 @@ describe('game update', () => {
     stepGame(state, 0.01, { ...idleInput, targetX: WORLD.width * 0.75 });
 
     expect(state.player.x).toBe(WORLD.width * 0.75 - state.player.width / 2);
+  });
+
+  it('launches a random bottom-row invader toward the player', () => {
+    const state = startNewGame();
+    state.diveTimer = 0;
+    state.enemyShotTimer = 10;
+
+    stepGame(state, 0, idleInput, () => 0);
+
+    const divers = state.invaders.filter((invader) => invader.diving);
+    expect(divers).toHaveLength(1);
+    expect(divers[0].row).toBe(INVADERS.rows - 1);
+    expect(divers[0].velocityY).toBeGreaterThan(0);
+    expect(state.diveTimer).toBeGreaterThan(0);
+  });
+
+  it('allows a diving invader to be shot for its row score', () => {
+    const state = startNewGame();
+    const diver = state.invaders[0];
+    Object.assign(diver, {
+      diving: true,
+      velocityX: 0,
+      velocityY: 0,
+    });
+    state.bullets.player = [{
+      id: 'dive-shot',
+      x: diver.x,
+      y: diver.y,
+      width: diver.width,
+      height: diver.height,
+    }];
+    state.diveTimer = 10;
+    state.enemyShotTimer = 10;
+
+    stepGame(state, 0, idleInput);
+
+    expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
+    expect(state.score).toBe(SCORING.byRow[diver.row]);
+  });
+
+  it('loses one ship when a diving invader crashes into the player', () => {
+    const state = startNewGame();
+    const diver = state.invaders[0];
+    Object.assign(diver, {
+      diving: true,
+      velocityX: 0,
+      velocityY: 0,
+      x: state.player.x,
+      y: state.player.y,
+    });
+    state.diveTimer = 10;
+    state.enemyShotTimer = 10;
+
+    stepGame(state, 0, idleInput);
+
+    expect(state.lives).toBe(PLAYER.startingLives - 1);
+    expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
+    expect(state.invulnerabilityTimer).toBe(PLAYER.invulnerabilitySeconds);
+  });
+
+  it('removes a missed diver without ending the game', () => {
+    const state = startNewGame();
+    const diver = state.invaders[0];
+    Object.assign(diver, {
+      diving: true,
+      velocityX: 0,
+      velocityY: 0,
+      y: WORLD.height + 1,
+    });
+    state.diveTimer = 10;
+    state.enemyShotTimer = 10;
+
+    stepGame(state, 0, idleInput);
+
+    expect(state.mode).toBe('running');
+    expect(state.lives).toBe(PLAYER.startingLives);
+    expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
   });
 
   it('fires a player shot after the cooldown expires', () => {
