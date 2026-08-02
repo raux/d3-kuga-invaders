@@ -46,7 +46,7 @@ function updateInterface() {
     overlay.hidden = false;
 
     if (state.mode === 'ready') {
-      overlayTitle.textContent = 'Defend the signal';
+      overlayTitle.textContent = 'Defend Kuga';
       overlayMessage.textContent = 'Move with A/D or the arrow keys. Fire with Space.';
       startButton.textContent = 'Start mission';
     } else if (state.mode === 'paused') {
@@ -54,7 +54,7 @@ function updateInterface() {
       overlayMessage.textContent = 'Press P, Escape, or Resume when you are ready.';
       startButton.textContent = 'Resume';
     } else {
-      overlayTitle.textContent = 'Signal lost';
+      overlayTitle.textContent = 'Kuga has fallen';
       overlayMessage.textContent = `Final score: ${state.score}. The fleet reached level ${state.level}.`;
       startButton.textContent = 'Try again';
     }

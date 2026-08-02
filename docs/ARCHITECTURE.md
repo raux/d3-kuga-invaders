@@ -2,7 +2,7 @@
 
 ## Goal
 
-Signal Invaders demonstrates that D3.js can render a real-time interactive SVG game while conventional JavaScript modules retain ownership of simulation and rules.
+Kuga Invaders demonstrates that D3.js can render a real-time interactive SVG game while conventional JavaScript modules retain ownership of simulation and rules.
 
 ## Runtime pipeline
 

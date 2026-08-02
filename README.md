@@ -1,4 +1,4 @@
-# Signal Invaders
+# Kuga Invaders
 
 An original Space Invaders-style browser game built with **JavaScript, D3.js, and SVG**. D3 data joins keep the SVG scene synchronized with game state while a `requestAnimationFrame` loop handles simulation.
 
@@ -96,6 +96,6 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for design details and extens
 
 The project was inspired by [joshberc/SpaceInvaders](https://github.com/joshberc/SpaceInvaders), a MonoGame/C# project licensed under MIT. Its credited sprites and sounds use CC BY 4.0.
 
-This implementation is written independently for the browser. It does **not** copy the reference project's code, sprites, or audio. Signal Invaders uses original SVG primitives and contains no third-party game assets.
+This implementation is written independently for the browser. It does **not** copy the reference project's code, sprites, or audio. Kuga Invaders uses original SVG primitives and contains no third-party game assets.
 
-Signal Invaders is available under the [MIT License](LICENSE).
+Kuga Invaders is available under the [MIT License](LICENSE).
