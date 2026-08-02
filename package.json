@@ -1,5 +1,5 @@
 {
-  "name": "d3-space-invaders",
+  "name": "d3-kuga-invaders",
   "version": "0.1.0",
   "private": true,
   "description": "An original Space Invaders-style browser game rendered with D3.js and SVG.",
