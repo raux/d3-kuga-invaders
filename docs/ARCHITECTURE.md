@@ -26,7 +26,7 @@ The top-level state contains:
 - Entities: player, formation/diving invaders, and two projectile collections
 - Identity: a monotonic counter for dynamically created entities
 
-Invader IDs derive from level, row, and column. Projectile IDs derive from the session counter. Stable IDs ensure D3 updates the intended SVG node rather than matching by array position.
+Invader IDs derive from level, row, and column. Their row determines a distinct base score, while destroying a diving invader applies a score multiplier. Projectile IDs derive from the session counter. Stable IDs ensure D3 updates the intended SVG node rather than matching by array position.
 
 ## Simulation
 

@@ -150,7 +150,8 @@ function resolvePlayerShots(state) {
     if (target) {
       destroyedInvaders.add(target.id);
       spentBullets.add(bullet.id);
-      state.score += SCORING.byRow[target.row] ?? 10;
+      const baseValue = SCORING.byRow[target.row] ?? 10;
+      state.score += baseValue * (target.diving ? SCORING.divingMultiplier : 1);
     }
   }
 

@@ -15,6 +15,11 @@ describe('game state', () => {
     expect(state.diveTimer).toBeGreaterThan(0);
   });
 
+  it('assigns a distinct value to every enemy row', () => {
+    expect(SCORING.byRow).toEqual([50, 40, 30, 20, 10]);
+    expect(new Set(SCORING.byRow).size).toBe(INVADERS.rows);
+  });
+
   it('starts a new running game while preserving the high score', () => {
     const state = startNewGame(9001);
 
@@ -59,7 +64,25 @@ describe('game update', () => {
     expect(state.diveTimer).toBeGreaterThan(0);
   });
 
-  it('allows a diving invader to be shot for its row score', () => {
+  it('adds one simultaneous diver per level up to five', () => {
+    for (let level = 1; level <= 6; level += 1) {
+      const state = startNewGame();
+      state.level = level;
+      const existingDivers = Math.min(5, level - 1);
+      state.invaders.slice(0, existingDivers).forEach((invader) => {
+        Object.assign(invader, { diving: true, velocityX: 0, velocityY: 0 });
+      });
+      state.diveTimer = 0;
+      state.enemyShotTimer = 10;
+
+      stepGame(state, 0, idleInput, () => 0);
+
+      const expectedDivers = Math.min(5, level);
+      expect(state.invaders.filter((invader) => invader.diving)).toHaveLength(expectedDivers);
+    }
+  });
+
+  it('allows a diving invader to be shot for double its row score', () => {
     const state = startNewGame();
     const diver = state.invaders[0];
     Object.assign(diver, {
@@ -80,7 +103,7 @@ describe('game update', () => {
     stepGame(state, 0, idleInput);
 
     expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
-    expect(state.score).toBe(SCORING.byRow[diver.row]);
+    expect(state.score).toBe(SCORING.byRow[diver.row] * SCORING.divingMultiplier);
   });
 
   it('loses one ship when a diving invader crashes into the player', () => {

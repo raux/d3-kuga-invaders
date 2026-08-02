@@ -7,7 +7,7 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Responsive, resolution-independent SVG playfield
 - Keyboard, touch-button, and finger-drag controls with responsive phone and landscape layouts
 - Five-row enemy formation with edge reversal and descent
-- Random kamikaze dive attacks that break formation and target the player
+- Random kamikaze dive attacks with one additional simultaneous diver per level, capped at five
 - Player and enemy projectiles with collision detection
 - Score, persistent high score, lives, levels, pause, and restart
 - Increasing speed and firing pressure across endless waves
@@ -44,6 +44,10 @@ Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chro
 | Move | `A`/`D` or `←`/`→` | Drag the playfield or use left/right buttons |
 | Fire | `Space` | Fire button |
 | Pause/resume | `P` or `Escape` | Pause button |
+
+## Scoring
+
+Enemy values from the top row to the bottom row are **50, 40, 30, 20, and 10 points**. Shooting an enemy during a dive earns **double** its normal row value. Clearing a wave awards an additional 250 points.
 
 ## How D3 is used
 

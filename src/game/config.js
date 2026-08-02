@@ -38,8 +38,8 @@ export const DIVES = Object.freeze({
   speedPerLevel: 12,
   maxVerticalSpeed: 420,
   maxHorizontalSpeed: 380,
-  levelsPerExtraDiver: 3,
-  maxActive: 3,
+  levelsPerExtraDiver: 1,
+  maxActive: 5,
 });
 
 export const BULLETS = Object.freeze({
@@ -52,6 +52,7 @@ export const BULLETS = Object.freeze({
 });
 
 export const SCORING = Object.freeze({
-  byRow: [40, 30, 20, 20, 10],
+  byRow: [50, 40, 30, 20, 10],
+  divingMultiplier: 2,
   levelClear: 250,
 });

@@ -10,6 +10,8 @@
   --cyan: #6aecff;
   --mint: #73ffba;
   --amber: #ffc96b;
+  --lime: #c9ff72;
+  --violet: #aa91ff;
   --rose: #ff6b9b;
 }
 
@@ -117,8 +119,10 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 .invader-antennae, .invader-legs { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
 .invader-eye { fill: #06111a; }
 .invader-row-0 { color: var(--rose); }
-.invader-row-1, .invader-row-2 { color: var(--amber); }
-.invader-row-3, .invader-row-4 { color: var(--cyan); }
+.invader-row-1 { color: var(--amber); }
+.invader-row-2 { color: var(--lime); }
+.invader-row-3 { color: var(--cyan); }
+.invader-row-4 { color: var(--violet); }
 .invader.is-diving {
   color: #ffedf4;
   filter: url('#soft-glow') drop-shadow(0 8px 8px rgba(255, 107, 155, 0.72));
@@ -152,6 +156,31 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
   text-align: center;
 }
 .overlay-card p:not(.status-label) { max-width: 32rem; margin: 12px auto 24px; color: var(--muted); line-height: 1.6; }
+.score-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(3, 10, 19, 0.62);
+  line-height: 1;
+}
+.score-legend span, .score-legend strong {
+  min-width: 2.1rem;
+  padding: 6px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+}
+.score-legend .score-row-0 { color: var(--rose); }
+.score-legend .score-row-1 { color: var(--amber); }
+.score-legend .score-row-2 { color: var(--lime); }
+.score-legend .score-row-3 { color: var(--cyan); }
+.score-legend .score-row-4 { color: var(--violet); }
+.score-legend strong { color: var(--ink); border-color: var(--rose); }
 
 .primary-button, .quiet-button, .mobile-controls button {
   border: 1px solid rgba(106, 236, 255, 0.38);
@@ -211,6 +240,7 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
   h1 { font-size: clamp(2rem, 11vw, 3.2rem); }
   .game-console { border-radius: 14px; }
   .hud div { padding: 9px 8px; }
+  .score-legend { gap: 4px; padding: 6px; }
   .mobile-controls {
     position: sticky;
     bottom: 0;
@@ -230,7 +260,7 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
   h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); }
   .quiet-button { min-height: 40px; padding: 7px 13px; }
   .board-wrap {
-    width: min(100%, calc((100dvh - 174px) * 1.5));
+    width: min(100%, calc((100dvh - 210px) * 1.5));
     min-width: 320px;
     margin-inline: auto;
   }
