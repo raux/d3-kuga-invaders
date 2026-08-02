@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="description" content="An original Space Invaders-style game rendered with D3.js and SVG." />
+    <title>Signal Invaders — D3.js Arcade Game</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">D3.js orbital defense</p>
+          <h1>Signal Invaders</h1>
+        </div>
+        <button id="pause-button" class="quiet-button" type="button" disabled>Pause</button>
+      </header>
+
+      <section class="game-console" aria-label="Signal Invaders game">
+        <div class="hud" aria-live="polite">
+          <div><span>Score</span><strong id="score">00000</strong></div>
+          <div><span>Best</span><strong id="high-score">00000</strong></div>
+          <div><span>Level</span><strong id="level">01</strong></div>
+          <div><span>Ships</span><strong id="lives">◆◆◆</strong></div>
+        </div>
+
+        <div class="board-wrap">
+          <svg
+            id="game-board"
+            role="img"
+            aria-label="A player ship defending Earth from a descending alien fleet"
+          ></svg>
+
+          <div id="game-overlay" class="game-overlay">
+            <div class="overlay-card">
+              <p class="status-label">Incoming transmission</p>
+              <h2 id="overlay-title">Defend the signal</h2>
+              <p id="overlay-message">Move with A/D or the arrow keys. Fire with Space.</p>
+              <button id="start-button" class="primary-button" type="button">Start mission</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-controls" aria-label="Touch controls">
+          <button type="button" data-action="left" aria-label="Move left">◀</button>
+          <button type="button" data-action="fire" class="fire-control" aria-label="Fire">Fire</button>
+          <button type="button" data-action="right" aria-label="Move right">▶</button>
+        </div>
+      </section>
+
+      <footer class="instructions">
+        <span><kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd> move</span>
+        <span><kbd>Space</kbd> fires</span>
+        <span><kbd>P</kbd> pauses</span>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
