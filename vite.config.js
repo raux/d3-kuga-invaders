@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './',
+  base: '/d3-space-invaders/',
   build: {
     target: 'es2022',
   },
