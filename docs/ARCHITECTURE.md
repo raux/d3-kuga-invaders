@@ -12,7 +12,8 @@ Each animation frame follows one direction of data flow:
 2. `main.js` calculates elapsed time and provides an input snapshot.
 3. `update.js` advances the mutable state by a bounded time step.
 4. `renderer.js` reconciles state with SVG through keyed D3 joins.
-5. `main.js` synchronizes the HTML HUD and saves a changed high score.
+5. `audio.js` and `haptics.js` consume transient simulation events.
+6. `main.js` synchronizes the HTML HUD and saves changed scores and preferences.
 
 The renderer never writes to game state. This boundary keeps core rules runnable under Node.js and prevents SVG transitions from becoming a second source of truth.
 
@@ -23,7 +24,8 @@ The top-level state contains:
 - Session: `mode`, `score`, `highScore`, `lives`, `level`, and elapsed time
 - Timers: player cooldown, enemy firing, dive scheduling, and player invulnerability
 - Formation: horizontal direction and level-dependent base speed
-- Entities: player, formation/diving invaders, and two projectile collections
+- Entities: player, formation/diving invaders, two projectile collections, particles, and score popups
+- Feedback: a per-frame event queue and bounded screen-shake state
 - Identity: a monotonic counter for dynamically created entities
 
 Invader IDs derive from level, row, and column. Their row determines a distinct base score, while destroying a diving invader applies a score multiplier. Projectile IDs derive from the session counter. Stable IDs ensure D3 updates the intended SVG node rather than matching by array position.
@@ -52,15 +54,16 @@ The SVG uses a `960 × 640` logical coordinate system and scales through `viewBo
 
 Static layers (stars and defense line) are constructed once. Dynamic layers use D3 joins:
 
-- Invaders: keyed `<g>` elements composed from SVG primitives, with rotated dive styling
+- Invaders: keyed `<g>` elements composed from SVG primitives, with standard and elite dive styling
 - Projectiles: keyed `<rect>` elements
-- Player: one persistent `<g>` with transform and visibility updates
+- Particles and score popups: short-lived keyed visual feedback
+- Player: one persistent `<g>` with transform, thrust, and visibility updates
 
 No external sprite sheets are required.
 
 ## Accessibility and input
 
-The playfield has an accessible label, while game status is represented in HTML around the SVG. Buttons have explicit labels, pressed states, large touch targets, and visible focus states. Keyboard controls prevent scrolling only for keys used during play. Touch controls appear on small or coarse-pointer devices. The horizontal joystick exposes slider semantics, a dead zone, pointer capture, and a visible center-return state; players can move with it or drag the playfield while firing with a second finger.
+The playfield has an accessible label, while game status is represented in HTML around the SVG. Buttons have explicit labels, pressed states, large touch targets, and visible focus states. Keyboard controls prevent scrolling only for keys used during play. Touch controls appear on small or coarse-pointer devices. The horizontal joystick exposes slider semantics, a dead zone, pointer capture, and a visible center-return state; players can move with it or drag the lower playfield while firing with a second finger. Auto-fire, synthesized sound, and haptics are independently toggleable, and reduced-motion preferences disable shake and transient particle animation.
 
 A dedicated polite live region announces mode changes without wrapping the frequently updated score HUD. The SVG describes the game at a high level rather than announcing every moving entity, because continuous frame-by-frame updates would overwhelm assistive technology. Responsive styles account for dynamic viewport height, device safe areas, portrait mode, and short landscape screens.
 
@@ -74,9 +77,9 @@ The production build registers `public/sw.js` under Vite's configured base path.
 
 Add `barriers` to state as collections of cells. Resolve projectile-to-cell collisions before projectile-to-ship collisions, then render cells with one keyed join.
 
-### Sound
+### Feedback events
 
-Subscribe to explicit simulation events rather than detecting state differences in the renderer. A small event queue can be cleared after audio playback each frame.
+The simulation emits short-lived events such as `shot-fired`, `enemy-destroyed`, `combo-increased`, and `player-hit`. Audio and haptic controllers consume them after each update without detecting state differences in the renderer. Future achievements and statistics can subscribe to the same event vocabulary.
 
 ### Fixed timestep
 
@@ -88,7 +91,7 @@ Because rules do not import D3, a Canvas or WebGL renderer can consume the same 
 
 ## Testing strategy
 
-Unit tests cover state creation, world bounds, cooldown behavior, collision scoring, formation reversal, level progression, and loss conditions. Recommended next layers are:
+Unit tests cover state creation, world bounds, cooldown behavior, combo and elite-diver scoring, formation reversal, level progression, touch regions, audio recipes, haptic patterns, and loss conditions. Recommended next layers are:
 
 - Property tests for collision symmetry and world bounds
 - Browser tests for keyboard/touch interaction

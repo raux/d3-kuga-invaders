@@ -23,11 +23,12 @@ class TestButton extends EventTarget {
   }
 }
 
-function pointerEvent(type, pointerId, clientX = 0) {
+function pointerEvent(type, pointerId, clientX = 0, clientY = 0) {
   const event = new Event(type, { cancelable: true });
   Object.defineProperties(event, {
     pointerId: { value: pointerId },
     clientX: { value: clientX },
+    clientY: { value: clientY },
   });
   return event;
 }
@@ -95,6 +96,20 @@ describe('touch controls', () => {
     expect(input.setAction).toHaveBeenLastCalledWith('left', false);
     expect(joystick.dataset.direction).toBe('center');
     expect(knob.style.transform).toBe('translate3d(0px, 0, 0)');
+  });
+
+  it('starts lower-playfield dragging only from the bottom half', () => {
+    const surface = new TestButton('drag');
+    surface.getBoundingClientRect = () => ({ left: 0, top: 100, width: 200, height: 200 });
+    const input = { setTargetX: vi.fn() };
+    bindDragControl(surface, input, 960, { startRegion: 'bottom-half' });
+
+    surface.dispatchEvent(pointerEvent('pointerdown', 8, 100, 150));
+    expect(input.setTargetX).not.toHaveBeenCalled();
+
+    surface.dispatchEvent(pointerEvent('pointerdown', 9, 150, 250));
+    expect(input.setTargetX).toHaveBeenLastCalledWith(720);
+    expect(surface.capturedPointers.has(9)).toBe(true);
   });
 
   it('maps a horizontal drag to world coordinates and clears it on release', () => {

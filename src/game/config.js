@@ -40,6 +40,12 @@ export const DIVES = Object.freeze({
   maxHorizontalSpeed: 380,
   levelsPerExtraDiver: 1,
   maxActive: 5,
+  eliteMinimumLevel: 2,
+  eliteBaseChance: 0.08,
+  eliteChancePerLevel: 0.025,
+  eliteMaxChance: 0.28,
+  eliteVerticalSpeedMultiplier: 1.55,
+  eliteHorizontalSpeedMultiplier: 1.25,
 });
 
 export const BULLETS = Object.freeze({
@@ -54,5 +60,24 @@ export const BULLETS = Object.freeze({
 export const SCORING = Object.freeze({
   byRow: [50, 40, 30, 20, 10],
   divingMultiplier: 2,
+  eliteDivingMultiplier: 5,
+  comboHitsPerStep: 3,
+  maxComboMultiplier: 5,
   levelClear: 250,
+});
+
+export const FEEDBACK = Object.freeze({
+  scorePopupSeconds: 0.72,
+  scorePopupRiseSpeed: 46,
+  explosionParticleCount: 12,
+  playerHitParticleCount: 20,
+  particleSeconds: 0.48,
+  particleDrag: 0.94,
+  particleGravity: 52,
+  hitShakeSeconds: 0.09,
+  hitShakeStrength: 3,
+  eliteShakeSeconds: 0.16,
+  eliteShakeStrength: 6,
+  playerShakeSeconds: 0.28,
+  playerShakeStrength: 11,
 });

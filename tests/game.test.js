@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INVADERS, PLAYER, SCORING, WORLD } from '../src/game/config.js';
+import { BULLETS, DIVES, INVADERS, PLAYER, SCORING, WORLD } from '../src/game/config.js';
 import { createInitialState, startNewGame } from '../src/game/state.js';
 import { stepGame } from '../src/game/update.js';
 
@@ -106,6 +106,25 @@ describe('game update', () => {
     expect(state.score).toBe(SCORING.byRow[diver.row] * SCORING.divingMultiplier);
   });
 
+  it('launches a faster elite diver worth five times its row score', () => {
+    const state = startNewGame();
+    state.level = DIVES.eliteMinimumLevel;
+    state.diveTimer = 0;
+    state.enemyShotTimer = 10;
+
+    stepGame(state, 0, idleInput, () => 0);
+
+    const elite = state.invaders.find((invader) => invader.diveType === 'elite');
+    expect(elite).toBeDefined();
+    expect(elite.velocityY).toBeGreaterThan(DIVES.verticalSpeed);
+
+    state.diveTimer = 10;
+    state.bullets.player = [{ id: 'elite-shot', ...elite }];
+    stepGame(state, 0, idleInput);
+
+    expect(state.score).toBe(SCORING.byRow[elite.row] * SCORING.eliteDivingMultiplier);
+  });
+
   it('loses one ship when a diving invader crashes into the player', () => {
     const state = startNewGame();
     const diver = state.invaders[0];
@@ -171,6 +190,45 @@ describe('game update', () => {
     expect(state.invaders).toHaveLength(INVADERS.rows * INVADERS.columns - 1);
     expect(state.bullets.player).toHaveLength(0);
     expect(state.score).toBe(SCORING.byRow[0]);
+  });
+
+  it('raises the combo multiplier every three consecutive hits', () => {
+    const state = startNewGame();
+    const targets = state.invaders.slice(0, 3);
+    state.enemyShotTimer = 10;
+    state.diveTimer = 10;
+    state.bullets.player = targets.map((target, index) => ({
+      id: `combo-shot-${index}`,
+      x: target.x,
+      y: target.y,
+      width: target.width,
+      height: target.height,
+    }));
+
+    stepGame(state, 0, idleInput);
+
+    expect(state.combo).toEqual({ hits: 3, multiplier: 2 });
+    expect(state.score).toBe(SCORING.byRow[0] * 4);
+    expect(state.scorePopups).toHaveLength(3);
+    expect(state.scorePopups[2].comboMultiplier).toBe(2);
+  });
+
+  it('resets the combo when a player shot misses', () => {
+    const state = startNewGame();
+    state.combo = { hits: 7, multiplier: 3 };
+    state.enemyShotTimer = 10;
+    state.diveTimer = 10;
+    state.bullets.player = [{
+      id: 'missed-shot',
+      x: 0,
+      y: -BULLETS.playerHeight - 1,
+      width: BULLETS.playerWidth,
+      height: BULLETS.playerHeight,
+    }];
+
+    stepGame(state, 0, idleInput);
+
+    expect(state.combo).toEqual({ hits: 0, multiplier: 1 });
   });
 
   it('reverses and drops the formation at the right edge', () => {

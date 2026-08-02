@@ -7,10 +7,13 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Responsive, resolution-independent SVG playfield
 - Keyboard, touchscreen joystick, and finger-drag controls with responsive phone and landscape layouts
 - Five-row enemy formation with edge reversal and descent
-- Random kamikaze dive attacks with one additional simultaneous diver per level, capped at five
+- Standard ×2 divers and faster elite ×5 divers, with up to five simultaneous attacks
 - Player and enemy projectiles with collision detection
-- Score, persistent high score, lives, levels, pause, and restart
+- Rising score popups and a consecutive-hit combo multiplier capped at ×5
+- Score, persistent high score, lives, levels, pause, restart, and return-to-title controls
 - Increasing speed and firing pressure across endless waves
+- Synthesized Web Audio effects, explosion particles, screen shake, and optional mobile haptics
+- Auto-fire and lower-playfield drag controls for mobile
 - Deterministic game-logic tests with Vitest
 - Installable PWA with home-screen icons and offline shell caching
 - Vite development and production builds
@@ -41,13 +44,13 @@ Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chro
 
 | Action | Keyboard | Touch |
 | --- | --- | --- |
-| Move | `A`/`D` or `←`/`→` | Drag the playfield or use the horizontal joystick |
-| Fire | `Space` | Fire button |
+| Move | `A`/`D` or `←`/`→` | Drag the lower playfield or use the horizontal joystick |
+| Fire | `Space` | Fire button or Auto toggle |
 | Pause/resume | `P` or `Escape` | Pause button |
 
 ## Scoring
 
-Enemy values from the top row to the bottom row are **50, 40, 30, 20, and 10 points**. Shooting an enemy during a dive earns **double** its normal row value. Clearing a wave awards an additional 250 points.
+Enemy values from the top row to the bottom row are **50, 40, 30, 20, and 10 points**. Standard divers score **×2** and faster elite divers score **×5**. Every three consecutive hits raises the combo multiplier by one, capped at ×5; a miss or player hit resets it. Clearing a wave awards an additional 250 points.
 
 ## How D3 is used
 
@@ -80,7 +83,9 @@ Keyboard / touch
 - `src/game/collision.js` — geometry helpers
 - `src/game/input.js` — keyboard input abstraction
 - `src/game/touch-controls.js` — pointer capture, joystick dead-zone handling, and simultaneous touch actions
-- `src/game/renderer.js` — D3/SVG scene renderer
+- `src/game/audio.js` — original synthesized Web Audio feedback
+- `src/game/haptics.js` — optional mobile vibration patterns
+- `src/game/renderer.js` — D3/SVG scene renderer and transient visual effects
 - `src/game/config.js` — balancing constants
 - `tests/` — deterministic unit tests
 
@@ -97,11 +102,11 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for design details and extens
 ## Roadmap
 
 - Destructible defense barriers
-- Optional Web Audio sound effects
+- Power-up drops and temporary weapon effects
+- Kuga Mothership boss waves
+- Zig-zag and coordinated swarm formations
 - UFO bonus encounters
-- Configurable difficulty and reduced-flashing mode
 - End-to-end browser tests
-- Optional haptic feedback for touch controls
 
 ## Inspiration and licensing
 

@@ -1,6 +1,33 @@
-import { BULLETS, DIVES, INVADERS, PLAYER, SCORING, WORLD } from './config.js';
+import { BULLETS, DIVES, FEEDBACK, INVADERS, PLAYER, SCORING, WORLD } from './config.js';
 import { clamp, intersects } from './collision.js';
 import { createInvaderFormation, nextId } from './state.js';
+
+function emitEvent(state, type, detail = {}) {
+  state.events.push({ type, ...detail });
+}
+
+function triggerShake(state, seconds, strength) {
+  state.screenShake.remaining = Math.max(state.screenShake.remaining, seconds);
+  state.screenShake.strength = Math.max(state.screenShake.strength, strength);
+}
+
+function spawnParticles(state, x, y, count, kind) {
+  for (let index = 0; index < count; index += 1) {
+    const angle = (index / count) * Math.PI * 2 + state.elapsed * 0.7;
+    const speed = 72 + (index % 4) * 28;
+    state.particles.push({
+      id: nextId(state, 'particle'),
+      x,
+      y,
+      velocityX: Math.cos(angle) * speed,
+      velocityY: Math.sin(angle) * speed - 18,
+      radius: 2 + (index % 3),
+      kind,
+      remaining: FEEDBACK.particleSeconds,
+      duration: FEEDBACK.particleSeconds,
+    });
+  }
+}
 
 function spawnPlayerBullet(state) {
   state.bullets.player.push({
@@ -11,6 +38,10 @@ function spawnPlayerBullet(state) {
     height: BULLETS.playerHeight,
   });
   state.playerShotTimer = PLAYER.shotCooldown;
+  emitEvent(state, 'shot-fired', {
+    x: state.player.x + state.player.width / 2,
+    y: state.player.y,
+  });
 }
 
 function bottomInvadersByColumn(invaders) {
@@ -70,22 +101,30 @@ function launchDiver(state, random) {
 
   const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
   const diver = candidates[index];
-  const verticalSpeed = Math.min(
+  const eliteChance = state.level < DIVES.eliteMinimumLevel
+    ? 0
+    : Math.min(
+      DIVES.eliteMaxChance,
+      DIVES.eliteBaseChance + (state.level - DIVES.eliteMinimumLevel) * DIVES.eliteChancePerLevel,
+    );
+  const isElite = random() < eliteChance;
+  const baseVerticalSpeed = Math.min(
     DIVES.maxVerticalSpeed,
     DIVES.verticalSpeed + (state.level - 1) * DIVES.speedPerLevel,
   );
+  const verticalSpeed = baseVerticalSpeed * (isElite ? DIVES.eliteVerticalSpeedMultiplier : 1);
+  const maxHorizontalSpeed = DIVES.maxHorizontalSpeed
+    * (isElite ? DIVES.eliteHorizontalSpeedMultiplier : 1);
   const distanceToPlayer = Math.max(1, state.player.y - diver.y);
   const travelTime = Math.max(0.6, distanceToPlayer / verticalSpeed);
   const targetOffset =
     state.player.x + state.player.width / 2 - (diver.x + diver.width / 2);
 
   diver.diving = true;
-  diver.velocityX = clamp(
-    targetOffset / travelTime,
-    -DIVES.maxHorizontalSpeed,
-    DIVES.maxHorizontalSpeed,
-  );
+  diver.diveType = isElite ? 'elite' : 'standard';
+  diver.velocityX = clamp(targetOffset / travelTime, -maxHorizontalSpeed, maxHorizontalSpeed);
   diver.velocityY = verticalSpeed;
+  if (isElite) emitEvent(state, 'elite-diver-launched');
   scheduleNextDive(state, random);
 }
 
@@ -122,6 +161,11 @@ function moveDivingInvaders(state, dt) {
     });
 }
 
+function resetCombo(state) {
+  state.combo.hits = 0;
+  state.combo.multiplier = 1;
+}
+
 function moveBullets(state, dt) {
   state.bullets.player.forEach((bullet) => {
     bullet.y -= BULLETS.playerSpeed * dt;
@@ -130,12 +174,85 @@ function moveBullets(state, dt) {
     bullet.y += BULLETS.enemySpeed * dt;
   });
 
+  const missedShot = state.bullets.player.some((bullet) => bullet.y + bullet.height < 0);
   state.bullets.player = state.bullets.player.filter(
     (bullet) => bullet.y + bullet.height >= 0,
   );
   state.bullets.enemy = state.bullets.enemy.filter(
     (bullet) => bullet.y <= WORLD.height,
   );
+  if (missedShot) resetCombo(state);
+}
+
+function moveScorePopups(state, dt) {
+  state.scorePopups.forEach((popup) => {
+    popup.y -= FEEDBACK.scorePopupRiseSpeed * dt;
+    popup.remaining -= dt;
+  });
+  state.scorePopups = state.scorePopups.filter((popup) => popup.remaining > 0);
+}
+
+function moveParticles(state, dt) {
+  const drag = Math.pow(FEEDBACK.particleDrag, dt * 60);
+  state.particles.forEach((particle) => {
+    particle.velocityX *= drag;
+    particle.velocityY = particle.velocityY * drag + FEEDBACK.particleGravity * dt;
+    particle.x += particle.velocityX * dt;
+    particle.y += particle.velocityY * dt;
+    particle.remaining -= dt;
+  });
+  state.particles = state.particles.filter((particle) => particle.remaining > 0);
+  state.screenShake.remaining = Math.max(0, state.screenShake.remaining - dt);
+  if (state.screenShake.remaining === 0) state.screenShake.strength = 0;
+}
+
+function awardInvaderHit(state, target) {
+  const previousMultiplier = state.combo.multiplier;
+  state.combo.hits += 1;
+  state.combo.multiplier = Math.min(
+    SCORING.maxComboMultiplier,
+    1 + Math.floor(state.combo.hits / SCORING.comboHitsPerStep),
+  );
+
+  const baseValue = SCORING.byRow[target.row] ?? 10;
+  const diveMultiplier = target.diveType === 'elite'
+    ? SCORING.eliteDivingMultiplier
+    : target.diving ? SCORING.divingMultiplier : 1;
+  const awarded = baseValue * diveMultiplier * state.combo.multiplier;
+  state.score += awarded;
+  const centerX = target.x + target.width / 2;
+  const centerY = target.y + target.height / 2;
+  state.scorePopups.push({
+    id: nextId(state, 'score-popup'),
+    x: centerX,
+    y: target.y,
+    value: awarded,
+    comboMultiplier: state.combo.multiplier,
+    remaining: FEEDBACK.scorePopupSeconds,
+    duration: FEEDBACK.scorePopupSeconds,
+  });
+
+  const isElite = target.diveType === 'elite';
+  spawnParticles(
+    state,
+    centerX,
+    centerY,
+    isElite ? FEEDBACK.explosionParticleCount + 6 : FEEDBACK.explosionParticleCount,
+    isElite ? 'elite' : `row-${target.row}`,
+  );
+  triggerShake(
+    state,
+    isElite ? FEEDBACK.eliteShakeSeconds : FEEDBACK.hitShakeSeconds,
+    isElite ? FEEDBACK.eliteShakeStrength : FEEDBACK.hitShakeStrength,
+  );
+  emitEvent(state, 'enemy-destroyed', {
+    elite: isElite,
+    value: awarded,
+    comboMultiplier: state.combo.multiplier,
+  });
+  if (state.combo.multiplier > previousMultiplier) {
+    emitEvent(state, 'combo-increased', { multiplier: state.combo.multiplier });
+  }
 }
 
 function resolvePlayerShots(state) {
@@ -150,8 +267,7 @@ function resolvePlayerShots(state) {
     if (target) {
       destroyedInvaders.add(target.id);
       spentBullets.add(bullet.id);
-      const baseValue = SCORING.byRow[target.row] ?? 10;
-      state.score += baseValue * (target.diving ? SCORING.divingMultiplier : 1);
+      awardInvaderHit(state, target);
     }
   }
 
@@ -163,6 +279,16 @@ function resolvePlayerShots(state) {
 
 function damagePlayer(state) {
   state.lives -= 1;
+  resetCombo(state);
+  spawnParticles(
+    state,
+    state.player.x + state.player.width / 2,
+    state.player.y + state.player.height / 2,
+    FEEDBACK.playerHitParticleCount,
+    'player-hit',
+  );
+  triggerShake(state, FEEDBACK.playerShakeSeconds, FEEDBACK.playerShakeStrength);
+  emitEvent(state, 'player-hit', { lives: state.lives });
 
   if (state.lives <= 0) {
     state.mode = 'gameover';
@@ -202,6 +328,7 @@ function removeMissedDivers(state) {
 function advanceLevel(state) {
   state.score += SCORING.levelClear;
   state.level += 1;
+  resetCombo(state);
   state.invaders = createInvaderFormation(state.level);
   state.bullets.player = [];
   state.bullets.enemy = [];
@@ -212,6 +339,7 @@ function advanceLevel(state) {
     1.5,
     DIVES.initialDelay - (state.level - 1) * DIVES.intervalLevelReduction,
   );
+  emitEvent(state, 'wave-started', { level: state.level });
 }
 
 function finishIfInvadersLanded(state) {
@@ -224,6 +352,7 @@ function finishIfInvadersLanded(state) {
 }
 
 export function stepGame(state, deltaSeconds, input, random = Math.random) {
+  state.events = [];
   if (state.mode !== 'running') return state;
 
   const dt = clamp(deltaSeconds, 0, 0.05);
@@ -254,6 +383,8 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
   moveFormation(state, dt);
   moveDivingInvaders(state, dt);
   moveBullets(state, dt);
+  moveScorePopups(state, dt);
+  moveParticles(state, dt);
   resolvePlayerShots(state);
   resolveEnemyShots(state);
   resolveDivingInvaders(state);

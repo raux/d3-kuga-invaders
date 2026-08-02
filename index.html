@@ -19,7 +19,10 @@
           <p class="eyebrow">D3.js orbital defense</p>
           <h1>Kuga Invaders</h1>
         </div>
-        <button id="pause-button" class="quiet-button" type="button" aria-pressed="false" disabled>Pause</button>
+        <div class="masthead-actions">
+          <button id="sound-button" class="quiet-button" type="button" aria-pressed="true">Sound on</button>
+          <button id="pause-button" class="quiet-button" type="button" aria-pressed="false" disabled>Pause</button>
+        </div>
       </header>
 
       <section class="game-console" aria-label="Kuga Invaders game">
@@ -27,31 +30,37 @@
           <div><span>Score</span><strong id="score">00000</strong></div>
           <div><span>Best</span><strong id="high-score">00000</strong></div>
           <div><span>Level</span><strong id="level">01</strong></div>
+          <div><span>Combo</span><strong id="combo">×1</strong></div>
           <div><span>Ships</span><strong id="lives">◆◆◆</strong></div>
         </div>
 
-        <div class="score-legend" aria-label="Enemy values from top row to bottom row: 50, 40, 30, 20, and 10 points. Diving enemies score double.">
+        <div class="score-legend" aria-label="Enemy values from top row to bottom row: 50, 40, 30, 20, and 10 points. Standard divers score double and elite divers score five times their row value.">
           <span class="score-row-0">50</span>
           <span class="score-row-1">40</span>
           <span class="score-row-2">30</span>
           <span class="score-row-3">20</span>
           <span class="score-row-4">10</span>
           <strong>Divers ×2</strong>
+          <strong class="elite-legend">Elite ×5</strong>
         </div>
 
         <div class="board-wrap">
           <svg
             id="game-board"
             role="img"
-            aria-label="A player ship defending Kuga from a descending alien fleet. Drag horizontally to move."
+            aria-label="A player ship defending Kuga from a descending alien fleet. Drag horizontally in the lower half to move."
           ></svg>
 
           <div id="game-overlay" class="game-overlay">
             <div class="overlay-card">
               <p class="status-label">Incoming transmission</p>
               <h2 id="overlay-title">Defend Kuga</h2>
-              <p id="overlay-message">Move with the joystick, keyboard, or by dragging. Fire to defend Kuga and dodge diving attackers.</p>
-              <button id="start-button" class="primary-button" type="button">Start mission</button>
+              <p id="overlay-message">Move with the joystick, keyboard, or by dragging in the lower playfield. Fire to defend Kuga and dodge diving attackers.</p>
+              <div class="overlay-actions">
+                <button id="start-button" class="primary-button" type="button">Start mission</button>
+                <button id="restart-button" class="quiet-button danger-button" type="button" hidden>Restart mission</button>
+                <button id="quit-button" class="quiet-button" type="button" hidden>Quit to title</button>
+              </div>
             </div>
           </div>
         </div>
@@ -78,10 +87,16 @@
             </div>
             <span class="control-label" aria-hidden="true">Move</span>
           </div>
-          <button type="button" data-action="fire" class="fire-control" aria-label="Fire">
-            <span class="fire-icon" aria-hidden="true">▲</span>
-            <span class="control-label" aria-hidden="true">Fire</span>
-          </button>
+          <div class="action-unit">
+            <button type="button" data-action="fire" class="fire-control" aria-label="Fire">
+              <span class="fire-icon" aria-hidden="true">▲</span>
+              <span class="control-label" aria-hidden="true">Fire</span>
+            </button>
+            <div class="mobile-options" aria-label="Mobile control options">
+              <button id="auto-fire-button" class="toggle-control" type="button" aria-pressed="false" aria-label="Auto-fire off">Auto</button>
+              <button id="haptics-button" class="toggle-control" type="button" aria-pressed="true" aria-label="Haptics on">Vibe</button>
+            </div>
+          </div>
         </div>
       </section>
 

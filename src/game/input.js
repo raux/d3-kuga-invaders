@@ -49,6 +49,12 @@ export function createInput(target = window) {
     return wasPressed;
   }
 
+  function reset() {
+    held.clear();
+    pressed.clear();
+    targetX = null;
+  }
+
   function snapshot() {
     return {
       left: held.has('left'),
@@ -60,10 +66,7 @@ export function createInput(target = window) {
 
   target.addEventListener('keydown', onKeyDown);
   target.addEventListener('keyup', onKeyUp);
-  target.addEventListener('blur', () => {
-    held.clear();
-    targetX = null;
-  });
+  target.addEventListener('blur', reset);
 
-  return { snapshot, consume, setAction, setTargetX };
+  return { snapshot, consume, reset, setAction, setTargetX };
 }

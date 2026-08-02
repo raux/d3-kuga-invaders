@@ -31,6 +31,17 @@ export function createInitialState(highScore = 0) {
     level,
     elapsed: 0,
     nextEntityId: 1,
+    combo: {
+      hits: 0,
+      multiplier: 1,
+    },
+    events: [],
+    scorePopups: [],
+    particles: [],
+    screenShake: {
+      remaining: 0,
+      strength: 0,
+    },
     playerShotTimer: 0,
     enemyShotTimer: 1,
     diveTimer: DIVES.initialDelay,

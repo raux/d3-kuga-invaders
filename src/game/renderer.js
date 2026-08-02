@@ -24,7 +24,10 @@ export function createRenderer(svgElement) {
   merge.append('feMergeNode').attr('in', 'blur');
   merge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-  svg
+  const scene = svg.append('g').attr('class', 'game-scene');
+  const reducedMotionQuery = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+
+  scene
     .append('g')
     .attr('class', 'stars')
     .selectAll('circle')
@@ -35,7 +38,7 @@ export function createRenderer(svgElement) {
     .attr('r', (star) => star.radius)
     .attr('opacity', (star) => star.opacity);
 
-  svg
+  scene
     .append('line')
     .attr('class', 'defense-line')
     .attr('x1', 28)
@@ -43,13 +46,20 @@ export function createRenderer(svgElement) {
     .attr('y1', 614)
     .attr('y2', 614);
 
-  const invaderLayer = svg.append('g').attr('class', 'invader-layer');
-  const bulletLayer = svg.append('g').attr('class', 'bullet-layer');
-  const playerLayer = svg.append('g').attr('class', 'player-layer');
+  const invaderLayer = scene.append('g').attr('class', 'invader-layer');
+  const bulletLayer = scene.append('g').attr('class', 'bullet-layer');
+  const particleLayer = scene.append('g').attr('class', 'particle-layer');
+  const playerLayer = scene.append('g').attr('class', 'player-layer');
+  const popupLayer = scene.append('g').attr('class', 'score-popup-layer');
 
   const player = playerLayer.append('g').attr('class', 'player-ship');
   player
     .append('path')
+    .attr('class', 'player-thruster')
+    .attr('d', 'M17,25 L22,39 L28,27 L34,39 L39,25 Z');
+  player
+    .append('path')
+    .attr('class', 'player-hull')
     .attr('d', 'M2,26 L2,13 L16,13 L22,3 L34,3 L40,13 L54,13 L54,26 Z');
   player.append('rect').attr('class', 'player-core').attr('x', 23).attr('y', 8).attr('width', 10).attr('height', 10);
 
@@ -74,6 +84,7 @@ export function createRenderer(svgElement) {
 
     invaders
       .classed('is-diving', (invader) => Boolean(invader.diving))
+      .classed('is-elite-diver', (invader) => invader.diveType === 'elite')
       .attr('transform', (invader) => {
         if (!invader.diving) return `translate(${invader.x}, ${invader.y})`;
 
@@ -106,9 +117,44 @@ export function createRenderer(svgElement) {
       .attr('height', (bullet) => bullet.height);
   }
 
+  function renderParticles(state) {
+    particleLayer
+      .selectAll('circle.particle')
+      .data(state.particles, (particle) => particle.id)
+      .join('circle')
+      .attr('class', (particle) => `particle particle-${particle.kind}`)
+      .attr('cx', (particle) => particle.x)
+      .attr('cy', (particle) => particle.y)
+      .attr('r', (particle) => particle.radius)
+      .attr('opacity', (particle) => Math.min(1, particle.remaining / (particle.duration * 0.45)));
+  }
+
+  function renderScorePopups(state) {
+    popupLayer
+      .selectAll('text.score-popup')
+      .data(state.scorePopups, (popup) => popup.id)
+      .join('text')
+      .attr('class', (popup) => `score-popup${popup.comboMultiplier > 1 ? ' has-combo' : ''}`)
+      .attr('x', (popup) => popup.x)
+      .attr('y', (popup) => popup.y)
+      .attr('opacity', (popup) => Math.min(1, popup.remaining / (popup.duration * 0.35)))
+      .text((popup) => `+${popup.value}`);
+  }
+
   function render(state) {
     renderInvaders(state);
     renderBullets(state);
+    renderParticles(state);
+    renderScorePopups(state);
+
+    const shouldShake = state.screenShake.remaining > 0 && !reducedMotionQuery?.matches;
+    const shakeX = shouldShake
+      ? Math.sin(state.elapsed * 113) * state.screenShake.strength
+      : 0;
+    const shakeY = shouldShake
+      ? Math.cos(state.elapsed * 97) * state.screenShake.strength * 0.55
+      : 0;
+    scene.attr('transform', `translate(${shakeX}, ${shakeY})`);
 
     player
       .attr('transform', `translate(${state.player.x}, ${state.player.y})`)

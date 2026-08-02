@@ -186,7 +186,7 @@ export function bindJoystick(control, input, { deadZone = 0.22 } = {}) {
   };
 }
 
-export function bindDragControl(surface, input, worldWidth) {
+export function bindDragControl(surface, input, worldWidth, { startRegion = 'all' } = {}) {
   let activePointerId = null;
 
   function updateTarget(event) {
@@ -199,6 +199,14 @@ export function bindDragControl(surface, input, worldWidth) {
 
   function start(event) {
     if (activePointerId !== null) return;
+
+    const bounds = surface.getBoundingClientRect();
+    if (
+      startRegion === 'bottom-half'
+      && Number.isFinite(bounds.top)
+      && Number.isFinite(bounds.height)
+      && event.clientY < bounds.top + bounds.height / 2
+    ) return;
 
     event.preventDefault();
     activePointerId = event.pointerId;
