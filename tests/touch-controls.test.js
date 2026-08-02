@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { bindActionButtons } from '../src/game/touch-controls.js';
+import { bindActionButtons, bindDragControl } from '../src/game/touch-controls.js';
 
 class TestButton extends EventTarget {
   constructor(action) {
@@ -22,9 +22,12 @@ class TestButton extends EventTarget {
   }
 }
 
-function pointerEvent(type, pointerId) {
+function pointerEvent(type, pointerId, clientX = 0) {
   const event = new Event(type, { cancelable: true });
-  Object.defineProperty(event, 'pointerId', { value: pointerId });
+  Object.defineProperties(event, {
+    pointerId: { value: pointerId },
+    clientX: { value: clientX },
+  });
   return event;
 }
 
@@ -62,5 +65,22 @@ describe('touch controls', () => {
 
     left.dispatchEvent(pointerEvent('pointerup', 1));
     expect(active).toEqual(new Set(['fire']));
+  });
+
+  it('maps a horizontal drag to world coordinates and clears it on release', () => {
+    const surface = new TestButton('drag');
+    surface.getBoundingClientRect = () => ({ left: 100, width: 200 });
+    const input = { setTargetX: vi.fn() };
+    bindDragControl(surface, input, 960);
+
+    surface.dispatchEvent(pointerEvent('pointerdown', 7, 150));
+    expect(input.setTargetX).toHaveBeenLastCalledWith(240);
+    expect(surface.capturedPointers.has(7)).toBe(true);
+
+    surface.dispatchEvent(pointerEvent('pointermove', 7, 250));
+    expect(input.setTargetX).toHaveBeenLastCalledWith(720);
+
+    surface.dispatchEvent(pointerEvent('pointerup', 7, 250));
+    expect(input.setTargetX).toHaveBeenLastCalledWith(null);
   });
 });

@@ -70,3 +70,59 @@ export function bindActionButtons(buttons, input) {
     });
   };
 }
+
+export function bindDragControl(surface, input, worldWidth) {
+  let activePointerId = null;
+
+  function updateTarget(event) {
+    const bounds = surface.getBoundingClientRect();
+    if (bounds.width <= 0) return;
+
+    const ratio = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    input.setTargetX(ratio * worldWidth);
+  }
+
+  function start(event) {
+    if (activePointerId !== null) return;
+
+    event.preventDefault();
+    activePointerId = event.pointerId;
+    updateTarget(event);
+
+    if (surface.setPointerCapture) {
+      try {
+        surface.setPointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture is optional on older mobile browsers.
+      }
+    }
+  }
+
+  function move(event) {
+    if (event.pointerId !== activePointerId) return;
+    event.preventDefault();
+    updateTarget(event);
+  }
+
+  function stop(event) {
+    if (event.pointerId !== activePointerId) return;
+    event.preventDefault();
+    activePointerId = null;
+    input.setTargetX(null);
+  }
+
+  const listeners = [
+    ['pointerdown', start],
+    ['pointermove', move],
+    ['pointerup', stop],
+    ['pointercancel', stop],
+    ['lostpointercapture', stop],
+  ];
+  listeners.forEach(([type, listener]) => surface.addEventListener(type, listener));
+
+  return () => {
+    activePointerId = null;
+    input.setTargetX(null);
+    listeners.forEach(([type, listener]) => surface.removeEventListener(type, listener));
+  };
+}

@@ -9,6 +9,7 @@ const KEY_TO_ACTION = new Map([
 export function createInput(target = window) {
   const held = new Set();
   const pressed = new Set();
+  let targetX = null;
 
   function setAction(action, active) {
     if (active) {
@@ -38,6 +39,10 @@ export function createInput(target = window) {
     if (action) setAction(action, false);
   }
 
+  function setTargetX(value) {
+    targetX = Number.isFinite(value) ? value : null;
+  }
+
   function consume(action) {
     const wasPressed = pressed.has(action);
     pressed.delete(action);
@@ -49,12 +54,16 @@ export function createInput(target = window) {
       left: held.has('left'),
       right: held.has('right'),
       fire: held.has('fire'),
+      targetX,
     };
   }
 
   target.addEventListener('keydown', onKeyDown);
   target.addEventListener('keyup', onKeyUp);
-  target.addEventListener('blur', () => held.clear());
+  target.addEventListener('blur', () => {
+    held.clear();
+    targetX = null;
+  });
 
-  return { snapshot, consume, setAction };
+  return { snapshot, consume, setAction, setTargetX };
 }

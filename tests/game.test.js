@@ -36,6 +36,14 @@ describe('game update', () => {
     expect(state.player.x).toBe(WORLD.width - WORLD.padding - state.player.width);
   });
 
+  it('positions the player under a drag target', () => {
+    const state = startNewGame();
+
+    stepGame(state, 0.01, { ...idleInput, targetX: WORLD.width * 0.75 });
+
+    expect(state.player.x).toBe(WORLD.width * 0.75 - state.player.width / 2);
+  });
+
   it('fires a player shot after the cooldown expires', () => {
     const state = startNewGame();
 

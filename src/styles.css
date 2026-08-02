@@ -108,7 +108,7 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
   background: #030914;
   touch-action: none;
 }
-#game-board { display: block; width: 100%; height: 100%; }
+#game-board { display: block; width: 100%; height: 100%; cursor: ew-resize; }
 .stars circle { fill: #b9edff; }
 .defense-line { stroke: rgba(115, 255, 186, 0.28); stroke-width: 2; stroke-dasharray: 3 10; }
 

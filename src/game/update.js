@@ -149,12 +149,20 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
   state.enemyShotTimer -= dt;
   state.invulnerabilityTimer = Math.max(0, state.invulnerabilityTimer - dt);
 
-  const movement = Number(Boolean(input.right)) - Number(Boolean(input.left));
-  state.player.x = clamp(
-    state.player.x + movement * PLAYER.speed * dt,
-    WORLD.padding,
-    WORLD.width - WORLD.padding - state.player.width,
-  );
+  if (Number.isFinite(input.targetX)) {
+    state.player.x = clamp(
+      input.targetX - state.player.width / 2,
+      WORLD.padding,
+      WORLD.width - WORLD.padding - state.player.width,
+    );
+  } else {
+    const movement = Number(Boolean(input.right)) - Number(Boolean(input.left));
+    state.player.x = clamp(
+      state.player.x + movement * PLAYER.speed * dt,
+      WORLD.padding,
+      WORLD.width - WORLD.padding - state.player.width,
+    );
+  }
 
   if (input.fire && state.playerShotTimer <= 0) spawnPlayerBullet(state);
 
