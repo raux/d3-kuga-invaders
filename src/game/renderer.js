@@ -71,13 +71,80 @@ export function createRenderer(svgElement) {
       .data(state.invaders, (invader) => invader.id)
       .join(
         (enter) => {
-          const group = enter.append('g').attr('class', (invader) => `invader invader-row-${invader.row}`);
-          group.append('path').attr('class', 'invader-antennae').attr('d', 'M9,7 L4,1 M31,7 L36,1');
-          group.append('rect').attr('class', 'invader-shell').attr('x', 3).attr('y', 7).attr('width', 34).attr('height', 17).attr('rx', 5);
-          group.append('rect').attr('class', 'invader-crown').attr('x', 10).attr('y', 3).attr('width', 20).attr('height', 8).attr('rx', 4);
-          group.append('circle').attr('class', 'invader-eye').attr('cx', 13).attr('cy', 15).attr('r', 2.4);
-          group.append('circle').attr('class', 'invader-eye').attr('cx', 27).attr('cy', 15).attr('r', 2.4);
-          group.append('path').attr('class', 'invader-legs').attr('d', 'M8,23 L5,28 M17,23 L15,28 M23,23 L25,28 M32,23 L35,28');
+          const group = enter
+            .append('g')
+            .attr('class', (invader) => `invader invader-row-${invader.row}`);
+          const motion = group.append('g').attr('class', 'invader-motion');
+
+          motion
+            .append('ellipse')
+            .attr('class', 'invader-aura')
+            .attr('cx', 20)
+            .attr('cy', 15)
+            .attr('rx', 24)
+            .attr('ry', 20);
+          motion
+            .append('path')
+            .attr('class', 'invader-speed-lines')
+            .attr('d', 'M4,-5 L4,-14 M13,-3 L11,-16 M27,-3 L29,-16 M36,-5 L36,-14');
+          motion
+            .append('path')
+            .attr('class', 'invader-antennae')
+            .attr('d', 'M10,8 Q7,3 3,1 M30,8 Q33,3 37,1');
+          motion
+            .append('rect')
+            .attr('class', 'invader-shell')
+            .attr('x', 1)
+            .attr('y', 7)
+            .attr('width', 38)
+            .attr('height', 19)
+            .attr('rx', 8);
+          motion
+            .append('path')
+            .attr('class', 'invader-crown')
+            .attr('d', 'M6,10 Q10,1 16,6 Q20,-1 24,6 Q30,1 34,10 Z');
+          motion
+            .append('path')
+            .attr('class', 'invader-shell-shine')
+            .attr('d', 'M6,11 Q10,8 15,9');
+
+          for (const eye of [
+            { side: 'left', x: 12.5 },
+            { side: 'right', x: 27.5 },
+          ]) {
+            const eyeGroup = motion.append('g').attr('class', `invader-eye invader-eye-${eye.side}`);
+            eyeGroup
+              .append('ellipse')
+              .attr('class', 'invader-eye-white')
+              .attr('cx', eye.x)
+              .attr('cy', 15.5)
+              .attr('rx', 5.4)
+              .attr('ry', 4.8);
+            eyeGroup
+              .append('circle')
+              .attr('class', 'invader-iris')
+              .attr('cx', eye.x)
+              .attr('cy', 16)
+              .attr('r', 3.3);
+            eyeGroup
+              .append('circle')
+              .attr('class', 'invader-pupil')
+              .attr('cx', eye.x)
+              .attr('cy', 16.2)
+              .attr('r', 1.75);
+            eyeGroup
+              .append('circle')
+              .attr('class', 'invader-eye-highlight')
+              .attr('cx', eye.x - 1.15)
+              .attr('cy', 14.7)
+              .attr('r', 1.05);
+          }
+
+          motion.append('path').attr('class', 'invader-brow').attr('d', 'M7,11 L16,9 M24,9 L33,11');
+          motion.append('path').attr('class', 'invader-mouth invader-mouth-idle').attr('d', 'M17,21 Q20,23.5 23,21');
+          motion.append('path').attr('class', 'invader-mouth invader-mouth-dive').attr('d', 'M16,23 Q20,18.5 24,23');
+          motion.append('path').attr('class', 'invader-cheeks').attr('d', 'M5,20 L8,19 M32,19 L35,20');
+          motion.append('path').attr('class', 'invader-legs').attr('d', 'M7,24 L4,29 M15,24 L14,29 M25,24 L26,29 M33,24 L36,29');
           return group;
         },
         (update) => update,
@@ -87,6 +154,8 @@ export function createRenderer(svgElement) {
     invaders
       .classed('is-diving', (invader) => Boolean(invader.diving))
       .classed('is-elite-diver', (invader) => invader.diveType === 'elite')
+      .style('--anime-delay', (invader) => `${-((invader.row * 10 + invader.column) * 83 % 1900)}ms`)
+      .style('--anime-speed', (invader) => `${1.05 + ((invader.row + invader.column) % 5) * 0.08}s`)
       .attr('transform', (invader) => {
         if (!invader.diving) return `translate(${invader.x}, ${invader.y})`;
 

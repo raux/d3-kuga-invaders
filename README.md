@@ -6,13 +6,13 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 
 - Responsive, resolution-independent SVG playfield
 - Keyboard, touchscreen joystick, and finger-drag controls with responsive phone and landscape layouts
-- Five-row enemy formation with edge reversal and descent
+- Five-row anime-inspired enemy formation with expressive eyes, blinking, body motion, and dive animation
 - Standard ×2 and faster elite ×5 divers, including double dives from level 3 and triple dives from level 6
 - Player and enemy projectiles with collision detection
 - Fifteen timed Overdrive stacks that increase score, fire rate, bullet speed, size, and visual power
 - Score, persistent high score, lives, levels, pause, restart, and return-to-title controls
 - Increasing speed and firing pressure across endless waves
-- Synthesized Web Audio for player fire, enemy fire, descending dive drops, impacts, and waves, plus optional mobile haptics
+- Synthesized Web Audio with row-specific enemy voices, layered explosions, enemy fire, descending dive drops, and wave cues
 - Stack-scaled explosions, shockwaves, tier announcements, screen shake, and weapon colors
 - Auto-fire and lower-playfield drag controls for mobile
 - Deterministic game-logic tests with Vitest
@@ -95,7 +95,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for design details and extens
 
 ## Design principles
 
-1. **Original visuals:** all ships and invaders are generated from SVG primitives; no sprite or sound assets are copied.
+1. **Original visuals:** all ships and anime-inspired invaders are generated from animated SVG primitives; no sprite or sound assets are copied.
 2. **Simulation/rendering separation:** the renderer displays state but does not decide game outcomes.
 3. **Stable data joins:** every projectile and invader receives a persistent key.
 4. **Bounded frame time:** long frames are clamped to avoid tunneling and sudden movement.

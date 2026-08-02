@@ -237,6 +237,11 @@ describe('game update', () => {
     expect(state.invaders).toHaveLength(INVADERS.rows * INVADERS.columns - 1);
     expect(state.bullets.player).toHaveLength(0);
     expect(state.score).toBe(SCORING.byRow[0]);
+    expect(state.events).toContainEqual(expect.objectContaining({
+      type: 'enemy-destroyed',
+      row: 0,
+      diveType: 'formation',
+    }));
   });
 
   it('raises the Overdrive tier every three consecutive kills', () => {

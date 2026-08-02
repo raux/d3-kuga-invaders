@@ -1,11 +1,5 @@
 const RECIPES = Object.freeze({
   'shot-fired': [{ frequency: 620, endFrequency: 430, duration: 0.055, type: 'square', volume: 0.035 }],
-  'enemy-shot-fired': [{ frequency: 240, endFrequency: 150, duration: 0.085, type: 'square', volume: 0.027 }],
-  'enemy-destroyed': [{ frequency: 180, endFrequency: 90, duration: 0.11, type: 'square', volume: 0.06 }],
-  'elite-destroyed': [
-    { frequency: 260, endFrequency: 120, duration: 0.16, type: 'sawtooth', volume: 0.07 },
-    { frequency: 520, endFrequency: 240, duration: 0.2, type: 'square', volume: 0.045, delay: 0.035 },
-  ],
   'combo-tier-increased': [
     { frequency: 520, endFrequency: 680, duration: 0.09, type: 'square', volume: 0.045 },
     { frequency: 680, endFrequency: 880, duration: 0.11, type: 'square', volume: 0.04, delay: 0.075 },
@@ -25,8 +19,58 @@ const RECIPES = Object.freeze({
   ],
 });
 
+const ENEMY_ROW_FREQUENCIES = Object.freeze([780, 620, 480, 350, 240]);
+const ENEMY_ROW_WAVES = Object.freeze(['sine', 'triangle', 'square', 'sawtooth', 'square']);
+
+function enemyExplosionRecipe(event) {
+  const row = Math.max(0, Math.min(4, Number(event.row) || 0));
+  const tier = Math.max(0, Math.min(4, Number(event.tier) || 0));
+  const signatureFrequency = ENEMY_ROW_FREQUENCIES[row];
+  const recipes = [
+    {
+      frequency: signatureFrequency,
+      endFrequency: signatureFrequency * (0.62 - tier * 0.025),
+      duration: 0.085 + row * 0.012 + tier * 0.008,
+      type: ENEMY_ROW_WAVES[row],
+      volume: 0.032 + tier * 0.005,
+    },
+    {
+      frequency: 210 + tier * 24,
+      endFrequency: 52,
+      duration: 0.13 + tier * 0.028,
+      type: 'sawtooth',
+      volume: 0.045 + tier * 0.007,
+      delay: 0.018,
+    },
+  ];
+
+  if (event.elite) {
+    recipes.push({
+      frequency: 980,
+      endFrequency: 170,
+      duration: 0.28,
+      type: 'square',
+      volume: 0.048,
+      delay: 0.035,
+    });
+  }
+
+  return recipes;
+}
+
 export function soundRecipeForEvent(event) {
-  if (event.type === 'enemy-destroyed' && event.elite) return RECIPES['elite-destroyed'];
+  if (event.type === 'enemy-destroyed') return enemyExplosionRecipe(event);
+  if (event.type === 'enemy-shot-fired') {
+    const row = Math.max(0, Math.min(4, Number(event.row) || 0));
+    const frequency = 300 - row * 28;
+    return [{
+      frequency,
+      endFrequency: frequency * 0.58,
+      duration: 0.075 + row * 0.006,
+      type: ENEMY_ROW_WAVES[row],
+      volume: 0.024,
+    }];
+  }
   if (event.type === 'dive-group-launched') {
     if (event.elite) return RECIPES['elite-dive-group-launched'];
     const count = Math.max(1, Math.min(3, event.count || 1));

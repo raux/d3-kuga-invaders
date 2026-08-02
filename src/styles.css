@@ -171,9 +171,84 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 .defense-line { stroke: rgba(115, 255, 186, 0.28); stroke-width: 2; stroke-dasharray: 3 10; }
 
 .invader { filter: url('#soft-glow'); }
-.invader-shell, .invader-crown { fill: currentColor; }
-.invader-antennae, .invader-legs { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
-.invader-eye { fill: #06111a; }
+.invader-motion {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: anime-hover var(--anime-speed, 1.2s) ease-in-out infinite alternate;
+  animation-delay: var(--anime-delay, 0ms);
+}
+.invader-shell { fill: currentColor; stroke: rgba(255, 255, 255, 0.36); stroke-width: 1.2px; }
+.invader-crown { fill: currentColor; filter: brightness(1.18); }
+.invader-shell-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.52);
+  stroke-linecap: round;
+  stroke-width: 1.5px;
+}
+.invader-antennae,
+.invader-legs {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.5px;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.invader-antennae {
+  animation: anime-antennae 760ms ease-in-out infinite alternate;
+  animation-delay: var(--anime-delay, 0ms);
+}
+.invader-legs {
+  animation: anime-legs 480ms ease-in-out infinite alternate;
+  animation-delay: var(--anime-delay, 0ms);
+}
+.invader-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: anime-blink 3.7s steps(1, end) infinite;
+  animation-delay: var(--anime-delay, 0ms);
+}
+.invader-eye-white { fill: #fff9ff; stroke: rgba(4, 15, 24, 0.5); stroke-width: 0.8px; }
+.invader-iris { fill: currentColor; filter: brightness(1.18); }
+.invader-pupil {
+  fill: #06111a;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: anime-eye-scan 2.4s ease-in-out infinite alternate;
+  animation-delay: var(--anime-delay, 0ms);
+}
+.invader-eye-highlight { fill: #fff; filter: drop-shadow(0 0 2px #fff); }
+.invader-brow {
+  fill: none;
+  opacity: 0;
+  stroke: #220711;
+  stroke-linecap: round;
+  stroke-width: 1.8px;
+  transition: opacity 100ms ease;
+}
+.invader-mouth {
+  fill: none;
+  stroke: #230813;
+  stroke-linecap: round;
+  stroke-width: 1.4px;
+}
+.invader-mouth-dive { display: none; }
+.invader-cheeks { fill: none; stroke: rgba(255, 238, 246, 0.66); stroke-linecap: round; stroke-width: 1.2px; }
+.invader-aura {
+  fill: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.invader-speed-lines {
+  fill: none;
+  opacity: 0;
+  stroke: currentColor;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+  stroke-width: 2px;
+}
 .invader-row-0 { color: var(--rose); }
 .invader-row-1 { color: var(--amber); }
 .invader-row-2 { color: var(--lime); }
@@ -183,14 +258,60 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
   color: #ffedf4;
   filter: url('#soft-glow') drop-shadow(0 8px 8px rgba(255, 107, 155, 0.72));
 }
+.invader.is-diving .invader-motion { animation: anime-dive-body 210ms ease-in-out infinite alternate; }
 .invader.is-diving .invader-shell { fill: var(--rose); }
-.invader.is-diving .invader-eye { fill: #fff4a8; }
+.invader.is-diving .invader-brow { opacity: 1; }
+.invader.is-diving .invader-mouth-idle { display: none; }
+.invader.is-diving .invader-mouth-dive { display: inline; }
+.invader.is-diving .invader-speed-lines {
+  opacity: 0.9;
+  animation: anime-speed-lines 320ms linear infinite;
+}
+.invader.is-diving .invader-pupil { fill: #7b001f; animation-duration: 420ms; }
 .invader.is-elite-diver {
   color: #fff2a8;
   filter: url('#soft-glow') drop-shadow(0 0 12px rgba(255, 201, 107, 0.95));
 }
 .invader.is-elite-diver .invader-shell { fill: var(--amber); }
-.invader.is-elite-diver .invader-eye { fill: #4a1700; }
+.invader.is-elite-diver .invader-iris { fill: var(--rose); }
+.invader.is-elite-diver .invader-pupil { fill: #3b0014; }
+.invader.is-elite-diver .invader-aura {
+  opacity: 0.2;
+  animation: anime-elite-aura 460ms ease-out infinite alternate;
+}
+@keyframes anime-hover {
+  from { transform: translateY(-1.5px) rotate(-1.2deg) scaleY(0.98); }
+  to { transform: translateY(1.5px) rotate(1.2deg) scaleY(1.03); }
+}
+@keyframes anime-antennae {
+  from { transform: rotate(-3deg) scaleY(0.94); }
+  to { transform: rotate(3deg) scaleY(1.06); }
+}
+@keyframes anime-legs {
+  from { transform: skewX(-4deg); }
+  to { transform: skewX(4deg); }
+}
+@keyframes anime-blink {
+  0%, 44%, 48%, 100% { transform: scaleY(1); }
+  45%, 47% { transform: scaleY(0.08); }
+}
+@keyframes anime-eye-scan {
+  0%, 18% { transform: translateX(-1.3px); }
+  44%, 58% { transform: translateX(0); }
+  84%, 100% { transform: translateX(1.3px); }
+}
+@keyframes anime-dive-body {
+  from { transform: scaleX(0.92) scaleY(1.08); }
+  to { transform: scaleX(1.07) scaleY(0.94); }
+}
+@keyframes anime-speed-lines {
+  from { stroke-dashoffset: 0; transform: translateY(-2px); }
+  to { stroke-dashoffset: -18; transform: translateY(5px); }
+}
+@keyframes anime-elite-aura {
+  from { opacity: 0.12; transform: scale(0.9); }
+  to { opacity: 0.34; transform: scale(1.12); }
+}
 
 .player-ship { color: var(--mint); filter: url('#soft-glow'); transition: color 160ms ease; }
 .player-ship.combo-tier-1 { color: var(--cyan); }
@@ -562,5 +683,8 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
     animation: none !important;
     transition: none !important;
   }
-  .particle, .combo-shockwave { display: none; }
+  .particle, .combo-shockwave, .invader-speed-lines { display: none; }
+  .invader-motion, .invader-eye, .invader-pupil, .invader-antennae, .invader-legs {
+    transform: none !important;
+  }
 }

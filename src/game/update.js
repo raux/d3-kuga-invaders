@@ -345,6 +345,8 @@ function awardInvaderHit(state, target) {
       : FEEDBACK.hitShakeStrength + modifiers.tier * 0.5,
   );
   emitEvent(state, 'enemy-destroyed', {
+    row: target.row,
+    diveType: target.diveType || 'formation',
     elite: isElite,
     value: awarded,
     comboMultiplier: modifiers.scoreMultiplier,

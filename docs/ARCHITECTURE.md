@@ -55,7 +55,7 @@ The SVG uses a `960 × 640` logical coordinate system and scales through `viewBo
 
 Static layers (stars and defense line) are constructed once. Dynamic layers use D3 joins:
 
-- Invaders: keyed `<g>` elements composed from SVG primitives, with standard and elite dive styling
+- Invaders: keyed nested `<g>` elements composed from original SVG primitives, with independently animated eyes, pupils, bodies, antennae, legs, speed lines, and elite auras
 - Projectiles: keyed `<rect>` elements
 - Particles, expanding shockwaves, tier announcements, and score popups: short-lived keyed visual feedback
 - Player: one persistent `<g>` with transform, thrust, and visibility updates
@@ -92,7 +92,7 @@ Because rules do not import D3, a Canvas or WebGL renderer can consume the same 
 
 ## Testing strategy
 
-Unit tests cover state creation, world bounds, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
+Unit tests cover state creation, world bounds, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, row-specific explosion recipes, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
 
 - Property tests for collision symmetry and world bounds
 - Browser tests for keyboard/touch interaction

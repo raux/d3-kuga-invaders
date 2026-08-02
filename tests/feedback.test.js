@@ -19,12 +19,31 @@ describe('Overdrive modifiers', () => {
 });
 
 describe('audio feedback recipes', () => {
-  it('uses a distinct layered sound for elite divers', () => {
-    const regular = soundRecipeForEvent({ type: 'enemy-destroyed', elite: false });
-    const elite = soundRecipeForEvent({ type: 'enemy-destroyed', elite: true });
+  it('uses row-specific layered explosions and an extra elite layer', () => {
+    const rowRecipes = Array.from({ length: 5 }, (_, row) => soundRecipeForEvent({
+      type: 'enemy-destroyed',
+      row,
+      tier: 0,
+      elite: false,
+    }));
+    const elite = soundRecipeForEvent({
+      type: 'enemy-destroyed',
+      row: 0,
+      tier: 0,
+      elite: true,
+    });
 
-    expect(regular).toHaveLength(1);
-    expect(elite.length).toBeGreaterThan(regular.length);
+    expect(new Set(rowRecipes.map((recipe) => recipe[0].frequency)).size).toBe(5);
+    expect(rowRecipes.every((recipe) => recipe.length === 2)).toBe(true);
+    expect(elite.length).toBeGreaterThan(rowRecipes[0].length);
+  });
+
+  it('makes explosion sounds stronger at higher Overdrive tiers', () => {
+    const warmup = soundRecipeForEvent({ type: 'enemy-destroyed', row: 2, tier: 0 });
+    const overdrive = soundRecipeForEvent({ type: 'enemy-destroyed', row: 2, tier: 4 });
+
+    expect(overdrive[1].duration).toBeGreaterThan(warmup[1].duration);
+    expect(overdrive[1].volume).toBeGreaterThan(warmup[1].volume);
   });
 
   it('uses descending drop sounds for standard, grouped, and elite dives', () => {
