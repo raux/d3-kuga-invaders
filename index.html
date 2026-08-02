@@ -34,6 +34,25 @@
           <div><span>Ships</span><strong id="lives">◆◆◆</strong></div>
         </div>
 
+        <div
+          id="overdrive-meter"
+          class="overdrive-meter"
+          data-tier="0"
+          role="progressbar"
+          aria-label="Kuga Overdrive stacks"
+          aria-valuemin="0"
+          aria-valuemax="15"
+          aria-valuenow="0"
+          aria-valuetext="Warmup, 0 of 15 stacks"
+        >
+          <div class="overdrive-copy">
+            <span id="overdrive-tier">Warmup</span>
+            <strong id="overdrive-count">0/15</strong>
+          </div>
+          <div id="overdrive-segments" class="overdrive-segments" aria-hidden="true"></div>
+          <div class="overdrive-timer" aria-hidden="true"><span id="overdrive-timer-fill"></span></div>
+        </div>
+
         <div class="score-legend" aria-label="Enemy values from top row to bottom row: 50, 40, 30, 20, and 10 points. Standard divers score double and elite divers score five times their row value.">
           <span class="score-row-0">50</span>
           <span class="score-row-1">40</span>

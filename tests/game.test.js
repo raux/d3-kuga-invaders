@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BULLETS, DIVES, INVADERS, PLAYER, SCORING, WORLD } from '../src/game/config.js';
+import { getComboModifiers } from '../src/game/combo.js';
+import { BULLETS, COMBO, DIVES, FEEDBACK, INVADERS, PLAYER, SCORING, WORLD } from '../src/game/config.js';
 import { createInitialState, startNewGame } from '../src/game/state.js';
 import { stepGame } from '../src/game/update.js';
 
@@ -62,6 +63,10 @@ describe('game update', () => {
     expect(divers[0].row).toBe(INVADERS.rows - 1);
     expect(divers[0].velocityY).toBeGreaterThan(0);
     expect(state.diveTimer).toBeGreaterThan(0);
+    expect(state.events).toContainEqual(expect.objectContaining({
+      type: 'diver-launched',
+      elite: false,
+    }));
   });
 
   it('adds one simultaneous diver per level up to five', () => {
@@ -117,6 +122,10 @@ describe('game update', () => {
     const elite = state.invaders.find((invader) => invader.diveType === 'elite');
     expect(elite).toBeDefined();
     expect(elite.velocityY).toBeGreaterThan(DIVES.verticalSpeed);
+    expect(state.events).toContainEqual(expect.objectContaining({
+      type: 'diver-launched',
+      elite: true,
+    }));
 
     state.diveTimer = 10;
     state.bullets.player = [{ id: 'elite-shot', ...elite }];
@@ -137,10 +146,12 @@ describe('game update', () => {
     });
     state.diveTimer = 10;
     state.enemyShotTimer = 10;
+    state.combo = { stacks: 8, tier: 2, timer: COMBO.graceSeconds, decaying: false };
 
     stepGame(state, 0, idleInput);
 
     expect(state.lives).toBe(PLAYER.startingLives - 1);
+    expect(state.combo.stacks).toBe(0);
     expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
     expect(state.invulnerabilityTimer).toBe(PLAYER.invulnerabilitySeconds);
   });
@@ -162,6 +173,19 @@ describe('game update', () => {
     expect(state.mode).toBe('running');
     expect(state.lives).toBe(PLAYER.startingLives);
     expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
+  });
+
+  it('emits a sound event when an enemy fires', () => {
+    const state = startNewGame();
+    state.enemyShotTimer = 0;
+    state.diveTimer = 10;
+
+    stepGame(state, 0, idleInput, () => 0);
+
+    expect(state.bullets.enemy).toHaveLength(1);
+    expect(state.events).toContainEqual(expect.objectContaining({
+      type: 'enemy-shot-fired',
+    }));
   });
 
   it('fires a player shot after the cooldown expires', () => {
@@ -192,7 +216,7 @@ describe('game update', () => {
     expect(state.score).toBe(SCORING.byRow[0]);
   });
 
-  it('raises the combo multiplier every three consecutive hits', () => {
+  it('raises the Overdrive tier every three consecutive kills', () => {
     const state = startNewGame();
     const targets = state.invaders.slice(0, 3);
     state.enemyShotTimer = 10;
@@ -207,15 +231,28 @@ describe('game update', () => {
 
     stepGame(state, 0, idleInput);
 
-    expect(state.combo).toEqual({ hits: 3, multiplier: 2 });
+    expect(state.combo).toEqual({
+      stacks: 3,
+      tier: 1,
+      timer: COMBO.graceSeconds,
+      decaying: false,
+    });
     expect(state.score).toBe(SCORING.byRow[0] * 4);
     expect(state.scorePopups).toHaveLength(3);
     expect(state.scorePopups[2].comboMultiplier).toBe(2);
+    expect(state.shockwaves).toHaveLength(3);
+    expect(state.announcements.at(-1).text).toBe('Velocity');
+    expect(state.particles.length).toBeGreaterThan(FEEDBACK.explosionParticleCount * 3);
   });
 
-  it('resets the combo when a player shot misses', () => {
+  it('does not break Overdrive when an auto-fired shot misses', () => {
     const state = startNewGame();
-    state.combo = { hits: 7, multiplier: 3 };
+    state.combo = {
+      stacks: 7,
+      tier: 2,
+      timer: COMBO.graceSeconds,
+      decaying: false,
+    };
     state.enemyShotTimer = 10;
     state.diveTimer = 10;
     state.bullets.player = [{
@@ -228,7 +265,40 @@ describe('game update', () => {
 
     stepGame(state, 0, idleInput);
 
-    expect(state.combo).toEqual({ hits: 0, multiplier: 1 });
+    expect(state.combo.stacks).toBe(7);
+    expect(state.combo.tier).toBe(2);
+  });
+
+  it('decays one Overdrive stack after its grace period', () => {
+    const state = startNewGame();
+    state.combo = { stacks: 4, tier: 1, timer: 0.01, decaying: false };
+    state.enemyShotTimer = 10;
+    state.diveTimer = 10;
+
+    stepGame(state, 0.02, idleInput);
+
+    expect(state.combo).toEqual({
+      stacks: 3,
+      tier: 1,
+      timer: COMBO.decaySeconds,
+      decaying: true,
+    });
+    expect(state.events.some((event) => event.type === 'combo-stack-decayed')).toBe(true);
+  });
+
+  it('stacks faster, larger, stronger player shots during Overdrive', () => {
+    const state = startNewGame();
+    state.combo = { stacks: 12, tier: 4, timer: COMBO.graceSeconds, decaying: false };
+
+    stepGame(state, 0, { ...idleInput, fire: true });
+
+    const shot = state.bullets.player[0];
+    const modifiers = getComboModifiers(12);
+    expect(state.playerShotTimer).toBeCloseTo(PLAYER.shotCooldown * modifiers.cooldownMultiplier);
+    expect(shot.width).toBeCloseTo(BULLETS.playerWidth * modifiers.bulletScale);
+    expect(shot.speed).toBeCloseTo(BULLETS.playerSpeed * modifiers.bulletSpeedMultiplier);
+    expect(shot.damage).toBe(2);
+    expect(shot.comboTier).toBe(4);
   });
 
   it('reverses and drops the formation at the right edge', () => {
@@ -244,8 +314,9 @@ describe('game update', () => {
     expect(state.invaders[0].y).toBe(previousY + INVADERS.dropDistance);
   });
 
-  it('advances to a fresh, faster level after clearing a wave', () => {
+  it('advances to a fresh, faster level while retaining half the stacks', () => {
     const state = startNewGame();
+    state.combo = { stacks: 8, tier: 2, timer: COMBO.graceSeconds, decaying: false };
     state.invaders = [];
 
     stepGame(state, 0, idleInput);
@@ -254,6 +325,8 @@ describe('game update', () => {
     expect(state.invaders).toHaveLength(INVADERS.rows * INVADERS.columns);
     expect(state.score).toBe(SCORING.levelClear);
     expect(state.formation.speed).toBe(INVADERS.baseSpeed + INVADERS.speedPerLevel);
+    expect(state.combo.stacks).toBe(4);
+    expect(state.combo.tier).toBe(1);
   });
 
   it('ends the game when the final ship is hit', () => {

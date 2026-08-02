@@ -61,9 +61,22 @@ export const SCORING = Object.freeze({
   byRow: [50, 40, 30, 20, 10],
   divingMultiplier: 2,
   eliteDivingMultiplier: 5,
-  comboHitsPerStep: 3,
-  maxComboMultiplier: 5,
   levelClear: 250,
+});
+
+export const COMBO = Object.freeze({
+  maxStacks: 15,
+  stacksPerTier: 3,
+  graceSeconds: 2.2,
+  decaySeconds: 0.75,
+  fireRatePerStack: 0.03,
+  minimumCooldownMultiplier: 0.55,
+  bulletSpeedPerStack: 0.015,
+  maximumBulletSpeedBonus: 0.25,
+  bulletScalePerStack: 0.025,
+  maximumBulletScaleBonus: 0.4,
+  overdriveMinimumStacks: 12,
+  tierNames: Object.freeze(['Warmup', 'Velocity', 'Surge', 'Power', 'Kuga Overdrive']),
 });
 
 export const FEEDBACK = Object.freeze({
@@ -74,6 +87,10 @@ export const FEEDBACK = Object.freeze({
   particleSeconds: 0.48,
   particleDrag: 0.94,
   particleGravity: 52,
+  shockwaveSeconds: 0.42,
+  shockwaveBaseRadius: 38,
+  shockwaveRadiusPerTier: 13,
+  tierAnnouncementSeconds: 0.9,
   hitShakeSeconds: 0.09,
   hitShakeStrength: 3,
   eliteShakeSeconds: 0.16,

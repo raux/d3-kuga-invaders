@@ -1,6 +1,7 @@
 import './styles.css';
 import { createAudioController } from './game/audio.js';
-import { WORLD } from './game/config.js';
+import { getComboModifiers } from './game/combo.js';
+import { COMBO, WORLD } from './game/config.js';
 import { createHapticsController } from './game/haptics.js';
 import { createInput } from './game/input.js';
 import { createRenderer } from './game/renderer.js';
@@ -22,6 +23,17 @@ const highScore = document.querySelector('#high-score');
 const lives = document.querySelector('#lives');
 const level = document.querySelector('#level');
 const combo = document.querySelector('#combo');
+const overdriveMeter = document.querySelector('#overdrive-meter');
+const overdriveTier = document.querySelector('#overdrive-tier');
+const overdriveCount = document.querySelector('#overdrive-count');
+const overdriveSegments = document.querySelector('#overdrive-segments');
+const overdriveTimerFill = document.querySelector('#overdrive-timer-fill');
+const comboSegments = Array.from({ length: COMBO.maxStacks }, (_, index) => {
+  const segment = document.createElement('span');
+  segment.dataset.stack = String(index + 1);
+  overdriveSegments.append(segment);
+  return segment;
+});
 const overlay = document.querySelector('#game-overlay');
 const overlayTitle = document.querySelector('#overlay-title');
 const overlayMessage = document.querySelector('#overlay-message');
@@ -105,8 +117,25 @@ function updateInterface() {
   highScore.textContent = String(state.highScore).padStart(5, '0');
   lives.textContent = '◆'.repeat(Math.max(0, state.lives)) || '—';
   level.textContent = String(state.level).padStart(2, '0');
-  combo.textContent = `×${state.combo.multiplier}`;
-  combo.title = `${state.combo.hits} consecutive hit${state.combo.hits === 1 ? '' : 's'}`;
+  const comboModifiers = getComboModifiers(state.combo.stacks);
+  combo.textContent = `×${comboModifiers.scoreMultiplier}`;
+  combo.title = `${state.combo.stacks} Overdrive stack${state.combo.stacks === 1 ? '' : 's'}`;
+  overdriveMeter.dataset.tier = String(comboModifiers.tier);
+  overdriveMeter.setAttribute('aria-valuenow', String(state.combo.stacks));
+  overdriveMeter.setAttribute(
+    'aria-valuetext',
+    `${comboModifiers.tierName}, ${state.combo.stacks} of ${COMBO.maxStacks} stacks`,
+  );
+  overdriveTier.textContent = comboModifiers.tierName;
+  overdriveCount.textContent = `${state.combo.stacks}/${COMBO.maxStacks}`;
+  comboSegments.forEach((segment, index) => {
+    segment.classList.toggle('is-active', index < state.combo.stacks);
+  });
+  const timerDuration = state.combo.decaying ? COMBO.decaySeconds : COMBO.graceSeconds;
+  const timerRatio = state.combo.stacks > 0
+    ? Math.max(0, Math.min(1, state.combo.timer / timerDuration))
+    : 0;
+  overdriveTimerFill.style.transform = `scaleX(${timerRatio})`;
   pauseButton.disabled = !['running', 'paused'].includes(state.mode);
   pauseButton.textContent = state.mode === 'paused' ? 'Resume' : 'Pause';
   pauseButton.setAttribute('aria-pressed', String(state.mode === 'paused'));

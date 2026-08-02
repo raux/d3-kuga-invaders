@@ -49,8 +49,10 @@ export function createRenderer(svgElement) {
   const invaderLayer = scene.append('g').attr('class', 'invader-layer');
   const bulletLayer = scene.append('g').attr('class', 'bullet-layer');
   const particleLayer = scene.append('g').attr('class', 'particle-layer');
+  const shockwaveLayer = scene.append('g').attr('class', 'shockwave-layer');
   const playerLayer = scene.append('g').attr('class', 'player-layer');
   const popupLayer = scene.append('g').attr('class', 'score-popup-layer');
+  const announcementLayer = scene.append('g').attr('class', 'announcement-layer');
 
   const player = playerLayer.append('g').attr('class', 'player-ship');
   player
@@ -100,7 +102,7 @@ export function createRenderer(svgElement) {
       .selectAll('rect.player-bullet')
       .data(state.bullets.player, (bullet) => bullet.id)
       .join('rect')
-      .attr('class', 'player-bullet')
+      .attr('class', (bullet) => `player-bullet combo-tier-${bullet.comboTier || 0}`)
       .attr('x', (bullet) => bullet.x)
       .attr('y', (bullet) => bullet.y)
       .attr('width', (bullet) => bullet.width)
@@ -129,23 +131,58 @@ export function createRenderer(svgElement) {
       .attr('opacity', (particle) => Math.min(1, particle.remaining / (particle.duration * 0.45)));
   }
 
+  function renderShockwaves(state) {
+    shockwaveLayer
+      .selectAll('circle.combo-shockwave')
+      .data(state.shockwaves, (shockwave) => shockwave.id)
+      .join('circle')
+      .attr('class', (shockwave) => `combo-shockwave combo-tier-${shockwave.tier}${shockwave.emphasis ? ' is-tier-up' : ''}`)
+      .attr('cx', (shockwave) => shockwave.x)
+      .attr('cy', (shockwave) => shockwave.y)
+      .attr('r', (shockwave) => {
+        const progress = 1 - shockwave.remaining / shockwave.duration;
+        return Math.max(2, shockwave.targetRadius * progress);
+      })
+      .attr('opacity', (shockwave) => Math.max(0, shockwave.remaining / shockwave.duration));
+  }
+
   function renderScorePopups(state) {
     popupLayer
       .selectAll('text.score-popup')
       .data(state.scorePopups, (popup) => popup.id)
       .join('text')
-      .attr('class', (popup) => `score-popup${popup.comboMultiplier > 1 ? ' has-combo' : ''}`)
+      .attr(
+        'class',
+        (popup) => `score-popup combo-tier-${popup.tier || 0}${popup.comboMultiplier > 1 ? ' has-combo' : ''}`,
+      )
       .attr('x', (popup) => popup.x)
       .attr('y', (popup) => popup.y)
       .attr('opacity', (popup) => Math.min(1, popup.remaining / (popup.duration * 0.35)))
-      .text((popup) => `+${popup.value}`);
+      .text((popup) => `+${popup.value} ×${popup.comboMultiplier}`);
+  }
+
+  function renderAnnouncements(state) {
+    announcementLayer
+      .selectAll('text.tier-announcement')
+      .data(state.announcements, (announcement) => announcement.id)
+      .join('text')
+      .attr('class', (announcement) => `tier-announcement combo-tier-${announcement.tier}`)
+      .attr('x', WORLD.width / 2)
+      .attr('y', WORLD.height * 0.54)
+      .attr('opacity', (announcement) => {
+        const life = announcement.remaining / announcement.duration;
+        return Math.min(1, life * 3, (1 - life) * 5);
+      })
+      .text((announcement) => `${announcement.text} ×${announcement.multiplier}`);
   }
 
   function render(state) {
     renderInvaders(state);
     renderBullets(state);
     renderParticles(state);
+    renderShockwaves(state);
     renderScorePopups(state);
+    renderAnnouncements(state);
 
     const shouldShake = state.screenShake.remaining > 0 && !reducedMotionQuery?.matches;
     const shakeX = shouldShake
@@ -157,6 +194,7 @@ export function createRenderer(svgElement) {
     scene.attr('transform', `translate(${shakeX}, ${shakeY})`);
 
     player
+      .attr('class', `player-ship combo-tier-${state.combo.tier}`)
       .attr('transform', `translate(${state.player.x}, ${state.player.y})`)
       .classed('is-invulnerable', state.invulnerabilityTimer > 0)
       .attr(

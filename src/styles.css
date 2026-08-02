@@ -105,6 +105,60 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 #combo { color: var(--amber); }
 #lives { color: var(--mint); letter-spacing: 0.2em; }
 
+.overdrive-meter {
+  --combo-color: var(--mint);
+  display: grid;
+  gap: 5px;
+  padding: 8px 14px 9px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(2, 9, 17, 0.82);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+.overdrive-meter[data-tier='1'] { --combo-color: var(--cyan); }
+.overdrive-meter[data-tier='2'] { --combo-color: var(--violet); }
+.overdrive-meter[data-tier='3'] { --combo-color: var(--amber); }
+.overdrive-meter[data-tier='4'] {
+  --combo-color: #fff4fb;
+  background: linear-gradient(90deg, rgba(115, 255, 186, 0.12), rgba(255, 107, 155, 0.15));
+  box-shadow: inset 0 0 24px rgba(255, 107, 155, 0.14);
+}
+.overdrive-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.overdrive-copy span,
+.overdrive-copy strong {
+  color: var(--combo-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.overdrive-segments { display: grid; grid-template-columns: repeat(15, 1fr); gap: 4px; }
+.overdrive-segments span {
+  height: 7px;
+  border: 1px solid rgba(140, 166, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(140, 166, 184, 0.07);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+.overdrive-segments span:nth-child(3n) { margin-right: 3px; }
+.overdrive-segments span:last-child { margin-right: 0; }
+.overdrive-segments span.is-active {
+  border-color: var(--combo-color);
+  background: var(--combo-color);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--combo-color) 72%, transparent);
+  transform: scaleY(1.18);
+}
+.overdrive-timer { height: 2px; overflow: hidden; border-radius: 999px; background: rgba(140, 166, 184, 0.1); }
+.overdrive-timer span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--combo-color);
+  box-shadow: 0 0 8px var(--combo-color);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
 .board-wrap {
   position: relative;
   overflow: hidden;
@@ -138,7 +192,11 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 .invader.is-elite-diver .invader-shell { fill: var(--amber); }
 .invader.is-elite-diver .invader-eye { fill: #4a1700; }
 
-.player-ship { color: var(--mint); filter: url('#soft-glow'); }
+.player-ship { color: var(--mint); filter: url('#soft-glow'); transition: color 160ms ease; }
+.player-ship.combo-tier-1 { color: var(--cyan); }
+.player-ship.combo-tier-2 { color: var(--violet); }
+.player-ship.combo-tier-3 { color: var(--amber); }
+.player-ship.combo-tier-4 { color: #fff4fb; filter: url('#soft-glow') drop-shadow(0 0 12px rgba(255, 107, 155, 0.8)); }
 .player-ship path { fill: currentColor; }
 .player-thruster {
   fill: var(--cyan) !important;
@@ -149,13 +207,18 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 }
 .player-core { fill: #dfffee; }
 .player-bullet { fill: var(--mint); filter: url('#soft-glow'); }
+.player-bullet.combo-tier-1 { fill: var(--cyan); filter: url('#soft-glow') drop-shadow(0 5px 4px rgba(106, 236, 255, 0.62)); }
+.player-bullet.combo-tier-2 { fill: var(--violet); filter: url('#soft-glow') drop-shadow(0 7px 5px rgba(170, 145, 255, 0.7)); }
+.player-bullet.combo-tier-3 { fill: var(--amber); filter: url('#soft-glow') drop-shadow(0 9px 6px rgba(255, 201, 107, 0.8)); }
+.player-bullet.combo-tier-4 { fill: #fff4fb; filter: url('#soft-glow') drop-shadow(0 11px 7px rgba(255, 107, 155, 0.95)); }
 .enemy-bullet { fill: var(--rose); filter: url('#soft-glow'); }
 .particle { pointer-events: none; }
-.particle-row-0, .particle-player-hit { fill: var(--rose); }
-.particle-row-1, .particle-elite { fill: var(--amber); }
-.particle-row-2 { fill: var(--lime); }
-.particle-row-3 { fill: var(--cyan); }
-.particle-row-4 { fill: var(--violet); }
+.particle-combo-0 { fill: var(--mint); }
+.particle-combo-1 { fill: var(--cyan); }
+.particle-combo-2 { fill: var(--violet); }
+.particle-combo-3 { fill: var(--amber); }
+.particle-combo-4 { fill: #fff4fb; filter: drop-shadow(0 0 5px rgba(255, 107, 155, 0.9)); }
+.particle-player-hit { fill: var(--rose); }
 @keyframes thrust-pulse {
   from { opacity: 0.48; transform: scaleY(0.72); }
   to { opacity: 0.95; transform: scaleY(1.12); }
@@ -172,7 +235,41 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
   stroke-width: 4px;
   text-anchor: middle;
 }
-.score-popup.has-combo { fill: var(--amber); font-size: 22px; }
+.score-popup.has-combo { font-size: 22px; }
+.score-popup.combo-tier-0 { fill: var(--mint); }
+.score-popup.combo-tier-1 { fill: var(--cyan); }
+.score-popup.combo-tier-2 { fill: var(--violet); }
+.score-popup.combo-tier-3 { fill: var(--amber); }
+.score-popup.combo-tier-4 { fill: #fff4fb; filter: url('#soft-glow') drop-shadow(0 0 7px rgba(255, 107, 155, 0.9)); }
+.combo-shockwave {
+  fill: none;
+  stroke: var(--mint);
+  stroke-width: 4px;
+  pointer-events: none;
+}
+.combo-shockwave.combo-tier-1 { stroke: var(--cyan); }
+.combo-shockwave.combo-tier-2 { stroke: var(--violet); }
+.combo-shockwave.combo-tier-3 { stroke: var(--amber); }
+.combo-shockwave.combo-tier-4 { stroke: #fff4fb; filter: url('#soft-glow') drop-shadow(0 0 8px rgba(255, 107, 155, 0.95)); }
+.combo-shockwave.is-tier-up { stroke-width: 8px; }
+.tier-announcement {
+  fill: var(--mint);
+  filter: url('#soft-glow');
+  font-family: 'Arial Narrow', ui-sans-serif, system-ui, sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(3, 8, 17, 0.9);
+  stroke-width: 8px;
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+.tier-announcement.combo-tier-1 { fill: var(--cyan); }
+.tier-announcement.combo-tier-2 { fill: var(--violet); }
+.tier-announcement.combo-tier-3 { fill: var(--amber); }
+.tier-announcement.combo-tier-4 { fill: #fff4fb; }
 
 .game-overlay {
   position: absolute;
@@ -415,6 +512,9 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
   h1 { font-size: clamp(2rem, 11vw, 3.2rem); }
   .game-console { border-radius: 14px; }
   .hud div { padding: 9px 8px; }
+  .overdrive-meter { padding: 6px 8px 7px; }
+  .overdrive-segments { gap: 2px; }
+  .overdrive-segments span { height: 6px; }
   .score-legend { gap: 4px; padding: 6px; }
   .mobile-controls {
     position: sticky;
@@ -462,5 +562,5 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
     animation: none !important;
     transition: none !important;
   }
-  .particle { display: none; }
+  .particle, .combo-shockwave { display: none; }
 }

@@ -22,6 +22,7 @@ The renderer never writes to game state. This boundary keeps core rules runnable
 The top-level state contains:
 
 - Session: `mode`, `score`, `highScore`, `lives`, `level`, and elapsed time
+- Overdrive: timed stacks, current tier, decay phase, and derived weapon modifiers
 - Timers: player cooldown, enemy firing, dive scheduling, and player invulnerability
 - Formation: horizontal direction and level-dependent base speed
 - Entities: player, formation/diving invaders, two projectile collections, particles, and score popups
@@ -56,7 +57,7 @@ Static layers (stars and defense line) are constructed once. Dynamic layers use 
 
 - Invaders: keyed `<g>` elements composed from SVG primitives, with standard and elite dive styling
 - Projectiles: keyed `<rect>` elements
-- Particles and score popups: short-lived keyed visual feedback
+- Particles, expanding shockwaves, tier announcements, and score popups: short-lived keyed visual feedback
 - Player: one persistent `<g>` with transform, thrust, and visibility updates
 
 No external sprite sheets are required.
@@ -79,7 +80,7 @@ Add `barriers` to state as collections of cells. Resolve projectile-to-cell coll
 
 ### Feedback events
 
-The simulation emits short-lived events such as `shot-fired`, `enemy-destroyed`, `combo-increased`, and `player-hit`. Audio and haptic controllers consume them after each update without detecting state differences in the renderer. Future achievements and statistics can subscribe to the same event vocabulary.
+The simulation emits short-lived events such as `shot-fired`, `enemy-shot-fired`, `diver-launched`, `enemy-destroyed`, `combo-stack-added`, `combo-tier-increased`, and `player-hit`. Audio and haptic controllers consume them after each update without detecting state differences in the renderer. Future achievements and statistics can subscribe to the same event vocabulary.
 
 ### Fixed timestep
 
@@ -91,7 +92,7 @@ Because rules do not import D3, a Canvas or WebGL renderer can consume the same 
 
 ## Testing strategy
 
-Unit tests cover state creation, world bounds, cooldown behavior, combo and elite-diver scoring, formation reversal, level progression, touch regions, audio recipes, haptic patterns, and loss conditions. Recommended next layers are:
+Unit tests cover state creation, world bounds, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
 
 - Property tests for collision symmetry and world bounds
 - Browser tests for keyboard/touch interaction

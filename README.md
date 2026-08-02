@@ -9,10 +9,11 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Five-row enemy formation with edge reversal and descent
 - Standard ×2 divers and faster elite ×5 divers, with up to five simultaneous attacks
 - Player and enemy projectiles with collision detection
-- Rising score popups and a consecutive-hit combo multiplier capped at ×5
+- Fifteen timed Overdrive stacks that increase score, fire rate, bullet speed, size, and visual power
 - Score, persistent high score, lives, levels, pause, restart, and return-to-title controls
 - Increasing speed and firing pressure across endless waves
-- Synthesized Web Audio effects, explosion particles, screen shake, and optional mobile haptics
+- Synthesized Web Audio for player fire, enemy fire, dives, impacts, and waves, plus optional mobile haptics
+- Stack-scaled explosions, shockwaves, tier announcements, screen shake, and weapon colors
 - Auto-fire and lower-playfield drag controls for mobile
 - Deterministic game-logic tests with Vitest
 - Installable PWA with home-screen icons and offline shell caching
@@ -50,7 +51,7 @@ Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chro
 
 ## Scoring
 
-Enemy values from the top row to the bottom row are **50, 40, 30, 20, and 10 points**. Standard divers score **×2** and faster elite divers score **×5**. Every three consecutive hits raises the combo multiplier by one, capped at ×5; a miss or player hit resets it. Clearing a wave awards an additional 250 points.
+Enemy values from the top row to the bottom row are **50, 40, 30, 20, and 10 points**. Standard divers score **×2** and faster elite divers score **×5**. Each kill adds an Overdrive stack and refreshes a 2.2-second grace timer. Every three stacks raises the score and weapon tier, capped at 15 stacks and ×5. Stacks decay gradually after the timer expires, player damage breaks the chain, and half the stacks carry into the next wave. Clearing a wave awards an additional 250 points.
 
 ## How D3 is used
 
@@ -79,6 +80,7 @@ Keyboard / touch
 
 - `src/main.js` — application lifecycle and animation loop
 - `src/game/state.js` — state factories and entity identity
+- `src/game/combo.js` — derived Overdrive tiers and weapon modifiers
 - `src/game/update.js` — simulation and game rules
 - `src/game/collision.js` — geometry helpers
 - `src/game/input.js` — keyboard input abstraction

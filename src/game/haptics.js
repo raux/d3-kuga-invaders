@@ -2,13 +2,16 @@ const PATTERNS = Object.freeze({
   'shot-fired': 7,
   'enemy-destroyed': 12,
   'elite-destroyed': [18, 24, 30],
-  'combo-increased': [10, 18, 10],
+  'combo-tier-increased': [10, 18, 10],
+  'overdrive-activated': [18, 24, 18, 24, 36],
   'player-hit': [35, 35, 70],
+  'diver-launched': 8,
   'elite-diver-launched': 16,
 });
 
 export function hapticPatternForEvent(event) {
   if (event.type === 'enemy-destroyed' && event.elite) return PATTERNS['elite-destroyed'];
+  if (event.type === 'diver-launched' && event.elite) return PATTERNS['elite-diver-launched'];
   return PATTERNS[event.type] ?? null;
 }
 

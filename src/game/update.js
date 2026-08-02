@@ -1,4 +1,5 @@
-import { BULLETS, DIVES, FEEDBACK, INVADERS, PLAYER, SCORING, WORLD } from './config.js';
+import { getComboModifiers, comboTierForStacks } from './combo.js';
+import { BULLETS, COMBO, DIVES, FEEDBACK, INVADERS, PLAYER, SCORING, WORLD } from './config.js';
 import { clamp, intersects } from './collision.js';
 import { createInvaderFormation, nextId } from './state.js';
 
@@ -30,17 +31,25 @@ function spawnParticles(state, x, y, count, kind) {
 }
 
 function spawnPlayerBullet(state) {
+  const modifiers = getComboModifiers(state.combo.stacks);
+  const width = BULLETS.playerWidth * modifiers.bulletScale;
+  const height = BULLETS.playerHeight * modifiers.bulletScale;
   state.bullets.player.push({
     id: nextId(state, 'player-shot'),
-    x: state.player.x + state.player.width / 2 - BULLETS.playerWidth / 2,
-    y: state.player.y - BULLETS.playerHeight,
-    width: BULLETS.playerWidth,
-    height: BULLETS.playerHeight,
+    x: state.player.x + state.player.width / 2 - width / 2,
+    y: state.player.y - height,
+    width,
+    height,
+    speed: BULLETS.playerSpeed * modifiers.bulletSpeedMultiplier,
+    damage: modifiers.bossDamage,
+    comboTier: modifiers.tier,
   });
-  state.playerShotTimer = PLAYER.shotCooldown;
+  state.playerShotTimer = PLAYER.shotCooldown * modifiers.cooldownMultiplier;
   emitEvent(state, 'shot-fired', {
     x: state.player.x + state.player.width / 2,
     y: state.player.y,
+    stacks: state.combo.stacks,
+    tier: modifiers.tier,
   });
 }
 
@@ -70,6 +79,7 @@ function spawnEnemyBullet(state, random) {
     width: BULLETS.enemyWidth,
     height: BULLETS.enemyHeight,
   });
+  emitEvent(state, 'enemy-shot-fired', { row: shooter.row });
 
   const pressure = 1 - state.invaders.length / (INVADERS.rows * INVADERS.columns);
   state.enemyShotTimer = Math.max(0.34, 1.2 - state.level * 0.06 - pressure * 0.35);
@@ -124,7 +134,7 @@ function launchDiver(state, random) {
   diver.diveType = isElite ? 'elite' : 'standard';
   diver.velocityX = clamp(targetOffset / travelTime, -maxHorizontalSpeed, maxHorizontalSpeed);
   diver.velocityY = verticalSpeed;
-  if (isElite) emitEvent(state, 'elite-diver-launched');
+  emitEvent(state, 'diver-launched', { elite: isElite });
   scheduleNextDive(state, random);
 }
 
@@ -161,27 +171,93 @@ function moveDivingInvaders(state, dt) {
     });
 }
 
-function resetCombo(state) {
-  state.combo.hits = 0;
-  state.combo.multiplier = 1;
+function clearCombo(state, reason = 'broken') {
+  if (state.combo.stacks > 0) {
+    emitEvent(state, 'combo-broken', { reason, previousStacks: state.combo.stacks });
+  }
+  Object.assign(state.combo, { stacks: 0, tier: 0, timer: 0, decaying: false });
+}
+
+function updateComboTimer(state, dt) {
+  if (state.combo.stacks <= 0) return;
+
+  state.combo.timer -= dt;
+  if (state.combo.timer > 0) return;
+
+  state.combo.stacks -= 1;
+  state.combo.tier = comboTierForStacks(state.combo.stacks);
+  state.combo.decaying = state.combo.stacks > 0;
+  state.combo.timer = state.combo.stacks > 0 ? COMBO.decaySeconds : 0;
+  emitEvent(state, 'combo-stack-decayed', {
+    stacks: state.combo.stacks,
+    tier: state.combo.tier,
+  });
+}
+
+function addComboStack(state, x, y) {
+  const previousStacks = state.combo.stacks;
+  const previousTier = state.combo.tier;
+  state.combo.stacks = Math.min(COMBO.maxStacks, state.combo.stacks + 1);
+  state.combo.tier = comboTierForStacks(state.combo.stacks);
+  state.combo.timer = COMBO.graceSeconds;
+  state.combo.decaying = false;
+  const tierIncreased = state.combo.tier > previousTier;
+
+  emitEvent(state, 'combo-stack-added', {
+    stacks: state.combo.stacks,
+    tier: state.combo.tier,
+    refreshed: state.combo.stacks === previousStacks,
+  });
+
+  state.shockwaves.push({
+    id: nextId(state, 'shockwave'),
+    x,
+    y,
+    tier: state.combo.tier,
+    emphasis: tierIncreased,
+    targetRadius: FEEDBACK.shockwaveBaseRadius
+      + state.combo.tier * FEEDBACK.shockwaveRadiusPerTier,
+    remaining: FEEDBACK.shockwaveSeconds,
+    duration: FEEDBACK.shockwaveSeconds,
+  });
+
+  if (tierIncreased) {
+    const modifiers = getComboModifiers(state.combo.stacks);
+    state.announcements.push({
+      id: nextId(state, 'tier-announcement'),
+      text: modifiers.tierName,
+      multiplier: modifiers.scoreMultiplier,
+      tier: modifiers.tier,
+      remaining: FEEDBACK.tierAnnouncementSeconds,
+      duration: FEEDBACK.tierAnnouncementSeconds,
+    });
+    emitEvent(state, 'combo-tier-increased', {
+      stacks: state.combo.stacks,
+      tier: modifiers.tier,
+      multiplier: modifiers.scoreMultiplier,
+    });
+    if (state.combo.tier === COMBO.tierNames.length - 1) {
+      emitEvent(state, 'overdrive-activated', { stacks: state.combo.stacks });
+    }
+  }
+
+  return { modifiers: getComboModifiers(state.combo.stacks), tierIncreased };
 }
 
 function moveBullets(state, dt) {
   state.bullets.player.forEach((bullet) => {
-    bullet.y -= BULLETS.playerSpeed * dt;
+    bullet.y -= (bullet.speed || BULLETS.playerSpeed) * dt;
   });
   state.bullets.enemy.forEach((bullet) => {
     bullet.y += BULLETS.enemySpeed * dt;
   });
 
-  const missedShot = state.bullets.player.some((bullet) => bullet.y + bullet.height < 0);
   state.bullets.player = state.bullets.player.filter(
     (bullet) => bullet.y + bullet.height >= 0,
   );
   state.bullets.enemy = state.bullets.enemy.filter(
     (bullet) => bullet.y <= WORLD.height,
   );
-  if (missedShot) resetCombo(state);
 }
 
 function moveScorePopups(state, dt) {
@@ -192,7 +268,7 @@ function moveScorePopups(state, dt) {
   state.scorePopups = state.scorePopups.filter((popup) => popup.remaining > 0);
 }
 
-function moveParticles(state, dt) {
+function moveTransientFeedback(state, dt) {
   const drag = Math.pow(FEEDBACK.particleDrag, dt * 60);
   state.particles.forEach((particle) => {
     particle.velocityX *= drag;
@@ -202,57 +278,57 @@ function moveParticles(state, dt) {
     particle.remaining -= dt;
   });
   state.particles = state.particles.filter((particle) => particle.remaining > 0);
+  state.shockwaves.forEach((shockwave) => { shockwave.remaining -= dt; });
+  state.shockwaves = state.shockwaves.filter((shockwave) => shockwave.remaining > 0);
+  state.announcements.forEach((announcement) => { announcement.remaining -= dt; });
+  state.announcements = state.announcements.filter(
+    (announcement) => announcement.remaining > 0,
+  );
   state.screenShake.remaining = Math.max(0, state.screenShake.remaining - dt);
   if (state.screenShake.remaining === 0) state.screenShake.strength = 0;
 }
 
 function awardInvaderHit(state, target) {
-  const previousMultiplier = state.combo.multiplier;
-  state.combo.hits += 1;
-  state.combo.multiplier = Math.min(
-    SCORING.maxComboMultiplier,
-    1 + Math.floor(state.combo.hits / SCORING.comboHitsPerStep),
-  );
-
+  const centerX = target.x + target.width / 2;
+  const centerY = target.y + target.height / 2;
+  const { modifiers, tierIncreased } = addComboStack(state, centerX, centerY);
   const baseValue = SCORING.byRow[target.row] ?? 10;
   const diveMultiplier = target.diveType === 'elite'
     ? SCORING.eliteDivingMultiplier
     : target.diving ? SCORING.divingMultiplier : 1;
-  const awarded = baseValue * diveMultiplier * state.combo.multiplier;
+  const awarded = baseValue * diveMultiplier * modifiers.scoreMultiplier;
   state.score += awarded;
-  const centerX = target.x + target.width / 2;
-  const centerY = target.y + target.height / 2;
   state.scorePopups.push({
     id: nextId(state, 'score-popup'),
     x: centerX,
     y: target.y,
     value: awarded,
-    comboMultiplier: state.combo.multiplier,
+    comboMultiplier: modifiers.scoreMultiplier,
+    tier: modifiers.tier,
     remaining: FEEDBACK.scorePopupSeconds,
     duration: FEEDBACK.scorePopupSeconds,
   });
 
   const isElite = target.diveType === 'elite';
-  spawnParticles(
-    state,
-    centerX,
-    centerY,
-    isElite ? FEEDBACK.explosionParticleCount + 6 : FEEDBACK.explosionParticleCount,
-    isElite ? 'elite' : `row-${target.row}`,
-  );
+  const particleCount = FEEDBACK.explosionParticleCount
+    + modifiers.tier * 3
+    + (isElite ? 6 : 0)
+    + (tierIncreased ? 8 : 0);
+  spawnParticles(state, centerX, centerY, particleCount, `combo-${modifiers.tier}`);
   triggerShake(
     state,
-    isElite ? FEEDBACK.eliteShakeSeconds : FEEDBACK.hitShakeSeconds,
-    isElite ? FEEDBACK.eliteShakeStrength : FEEDBACK.hitShakeStrength,
+    tierIncreased || isElite ? FEEDBACK.eliteShakeSeconds : FEEDBACK.hitShakeSeconds,
+    tierIncreased || isElite
+      ? FEEDBACK.eliteShakeStrength
+      : FEEDBACK.hitShakeStrength + modifiers.tier * 0.5,
   );
   emitEvent(state, 'enemy-destroyed', {
     elite: isElite,
     value: awarded,
-    comboMultiplier: state.combo.multiplier,
+    comboMultiplier: modifiers.scoreMultiplier,
+    stacks: state.combo.stacks,
+    tier: modifiers.tier,
   });
-  if (state.combo.multiplier > previousMultiplier) {
-    emitEvent(state, 'combo-increased', { multiplier: state.combo.multiplier });
-  }
 }
 
 function resolvePlayerShots(state) {
@@ -279,7 +355,7 @@ function resolvePlayerShots(state) {
 
 function damagePlayer(state) {
   state.lives -= 1;
-  resetCombo(state);
+  clearCombo(state, 'player-hit');
   spawnParticles(
     state,
     state.player.x + state.player.width / 2,
@@ -328,7 +404,10 @@ function removeMissedDivers(state) {
 function advanceLevel(state) {
   state.score += SCORING.levelClear;
   state.level += 1;
-  resetCombo(state);
+  state.combo.stacks = Math.floor(state.combo.stacks / 2);
+  state.combo.tier = comboTierForStacks(state.combo.stacks);
+  state.combo.timer = state.combo.stacks > 0 ? COMBO.graceSeconds : 0;
+  state.combo.decaying = false;
   state.invaders = createInvaderFormation(state.level);
   state.bullets.player = [];
   state.bullets.enemy = [];
@@ -347,6 +426,7 @@ function finishIfInvadersLanded(state) {
     (invader) => !invader.diving && invader.y + invader.height >= INVADERS.floorY,
   )) {
     state.lives = 0;
+    clearCombo(state, 'formation-landed');
     state.mode = 'gameover';
   }
 }
@@ -361,6 +441,7 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
   state.enemyShotTimer -= dt;
   state.diveTimer -= dt;
   state.invulnerabilityTimer = Math.max(0, state.invulnerabilityTimer - dt);
+  updateComboTimer(state, dt);
 
   if (Number.isFinite(input.targetX)) {
     state.player.x = clamp(
@@ -384,7 +465,7 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
   moveDivingInvaders(state, dt);
   moveBullets(state, dt);
   moveScorePopups(state, dt);
-  moveParticles(state, dt);
+  moveTransientFeedback(state, dt);
   resolvePlayerShots(state);
   resolveEnemyShots(state);
   resolveDivingInvaders(state);

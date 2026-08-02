@@ -32,12 +32,16 @@ export function createInitialState(highScore = 0) {
     elapsed: 0,
     nextEntityId: 1,
     combo: {
-      hits: 0,
-      multiplier: 1,
+      stacks: 0,
+      tier: 0,
+      timer: 0,
+      decaying: false,
     },
     events: [],
     scorePopups: [],
     particles: [],
+    shockwaves: [],
+    announcements: [],
     screenShake: {
       remaining: 0,
       strength: 0,
