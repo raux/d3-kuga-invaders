@@ -27,15 +27,30 @@ describe('audio feedback recipes', () => {
     expect(elite.length).toBeGreaterThan(regular.length);
   });
 
-  it('distinguishes enemy fire, standard dives, and elite dives', () => {
+  it('uses descending drop sounds for standard, grouped, and elite dives', () => {
     const enemyShot = soundRecipeForEvent({ type: 'enemy-shot-fired' });
-    const standardDive = soundRecipeForEvent({ type: 'diver-launched', elite: false });
-    const eliteDive = soundRecipeForEvent({ type: 'diver-launched', elite: true });
+    const standardDive = soundRecipeForEvent({
+      type: 'dive-group-launched',
+      count: 1,
+      elite: false,
+    });
+    const tripleDive = soundRecipeForEvent({
+      type: 'dive-group-launched',
+      count: 3,
+      elite: false,
+    });
+    const eliteDive = soundRecipeForEvent({
+      type: 'dive-group-launched',
+      count: 2,
+      elite: true,
+    });
 
     expect(enemyShot).toHaveLength(1);
     expect(standardDive).toHaveLength(1);
+    expect(standardDive[0].endFrequency).toBeLessThan(standardDive[0].frequency);
+    expect(tripleDive[0].duration).toBeGreaterThan(standardDive[0].duration);
     expect(eliteDive.length).toBeGreaterThan(standardDive.length);
-    expect(eliteDive[0].frequency).not.toBe(standardDive[0].frequency);
+    expect(eliteDive[0].endFrequency).toBeLessThan(eliteDive[0].frequency);
   });
 
   it('raises stack-tone pitch as Overdrive grows', () => {

@@ -64,8 +64,10 @@ describe('game update', () => {
     expect(divers[0].velocityY).toBeGreaterThan(0);
     expect(state.diveTimer).toBeGreaterThan(0);
     expect(state.events).toContainEqual(expect.objectContaining({
-      type: 'diver-launched',
+      type: 'dive-group-launched',
+      count: 1,
       elite: false,
+      eliteCount: 0,
     }));
   });
 
@@ -84,6 +86,25 @@ describe('game update', () => {
 
       const expectedDivers = Math.min(5, level);
       expect(state.invaders.filter((invader) => invader.diving)).toHaveLength(expectedDivers);
+    }
+  });
+
+  it('launches grouped dives as the level increases', () => {
+    for (const [level, expectedCount] of [[3, 2], [6, 3]]) {
+      const state = startNewGame();
+      state.level = level;
+      state.diveTimer = 0;
+      state.enemyShotTimer = 10;
+
+      stepGame(state, 0, idleInput, () => 0.99);
+
+      const divers = state.invaders.filter((invader) => invader.diving);
+      expect(divers).toHaveLength(expectedCount);
+      expect(new Set(divers.map((diver) => diver.velocityX)).size).toBe(expectedCount);
+      expect(state.events).toContainEqual(expect.objectContaining({
+        type: 'dive-group-launched',
+        count: expectedCount,
+      }));
     }
   });
 
@@ -123,8 +144,10 @@ describe('game update', () => {
     expect(elite).toBeDefined();
     expect(elite.velocityY).toBeGreaterThan(DIVES.verticalSpeed);
     expect(state.events).toContainEqual(expect.objectContaining({
-      type: 'diver-launched',
+      type: 'dive-group-launched',
+      count: 1,
       elite: true,
+      eliteCount: 1,
     }));
 
     state.diveTimer = 10;

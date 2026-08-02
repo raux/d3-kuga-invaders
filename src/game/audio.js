@@ -15,10 +15,9 @@ const RECIPES = Object.freeze({
     { frequency: 660, endFrequency: 990, duration: 0.22, type: 'square', volume: 0.055, delay: 0.12 },
   ],
   'player-hit': [{ frequency: 130, endFrequency: 48, duration: 0.32, type: 'sawtooth', volume: 0.09 }],
-  'diver-launched': [{ frequency: 280, endFrequency: 510, duration: 0.14, type: 'sawtooth', volume: 0.028 }],
-  'elite-diver-launched': [
-    { frequency: 360, endFrequency: 760, duration: 0.2, type: 'sawtooth', volume: 0.045 },
-    { frequency: 180, endFrequency: 420, duration: 0.24, type: 'square', volume: 0.025, delay: 0.04 },
+  'elite-dive-group-launched': [
+    { frequency: 920, endFrequency: 150, duration: 0.32, type: 'sawtooth', volume: 0.052 },
+    { frequency: 520, endFrequency: 80, duration: 0.38, type: 'square', volume: 0.028, delay: 0.035 },
   ],
   'wave-started': [
     { frequency: 220, endFrequency: 330, duration: 0.12, type: 'square', volume: 0.045 },
@@ -28,7 +27,17 @@ const RECIPES = Object.freeze({
 
 export function soundRecipeForEvent(event) {
   if (event.type === 'enemy-destroyed' && event.elite) return RECIPES['elite-destroyed'];
-  if (event.type === 'diver-launched' && event.elite) return RECIPES['elite-diver-launched'];
+  if (event.type === 'dive-group-launched') {
+    if (event.elite) return RECIPES['elite-dive-group-launched'];
+    const count = Math.max(1, Math.min(3, event.count || 1));
+    return [{
+      frequency: 650 + count * 55,
+      endFrequency: 190 - count * 18,
+      duration: 0.2 + count * 0.045,
+      type: 'sawtooth',
+      volume: 0.03 + count * 0.006,
+    }];
+  }
   if (event.type === 'combo-stack-added') {
     const frequency = 300 + Math.min(15, event.stacks || 0) * 22;
     return [{

@@ -92,13 +92,14 @@ function scheduleNextDive(state, random) {
   state.diveTimer = minimum + random() * (maximum - minimum);
 }
 
-function launchDiver(state, random) {
+function launchDiveGroup(state, random) {
   const formationInvaders = state.invaders.filter((invader) => !invader.diving);
   const activeDivers = state.invaders.length - formationInvaders.length;
   const levelLimit = 1 + Math.floor((state.level - 1) / DIVES.levelsPerExtraDiver);
   const activeLimit = Math.min(DIVES.maxActive, levelLimit);
+  const availableSlots = activeLimit - activeDivers;
 
-  if (activeDivers >= activeLimit) {
+  if (availableSlots <= 0) {
     state.diveTimer = 0.4;
     return;
   }
@@ -109,32 +110,53 @@ function launchDiver(state, random) {
     return;
   }
 
-  const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
-  const diver = candidates[index];
+  const levelGroupSize = state.level >= DIVES.tripleDiveLevel
+    ? DIVES.maxPerLaunch
+    : state.level >= DIVES.doubleDiveLevel ? 2 : 1;
+  const groupSize = Math.min(levelGroupSize, availableSlots, candidates.length);
   const eliteChance = state.level < DIVES.eliteMinimumLevel
     ? 0
     : Math.min(
       DIVES.eliteMaxChance,
       DIVES.eliteBaseChance + (state.level - DIVES.eliteMinimumLevel) * DIVES.eliteChancePerLevel,
     );
-  const isElite = random() < eliteChance;
   const baseVerticalSpeed = Math.min(
     DIVES.maxVerticalSpeed,
     DIVES.verticalSpeed + (state.level - 1) * DIVES.speedPerLevel,
   );
-  const verticalSpeed = baseVerticalSpeed * (isElite ? DIVES.eliteVerticalSpeedMultiplier : 1);
-  const maxHorizontalSpeed = DIVES.maxHorizontalSpeed
-    * (isElite ? DIVES.eliteHorizontalSpeedMultiplier : 1);
-  const distanceToPlayer = Math.max(1, state.player.y - diver.y);
-  const travelTime = Math.max(0.6, distanceToPlayer / verticalSpeed);
-  const targetOffset =
-    state.player.x + state.player.width / 2 - (diver.x + diver.width / 2);
+  let eliteCount = 0;
 
-  diver.diving = true;
-  diver.diveType = isElite ? 'elite' : 'standard';
-  diver.velocityX = clamp(targetOffset / travelTime, -maxHorizontalSpeed, maxHorizontalSpeed);
-  diver.velocityY = verticalSpeed;
-  emitEvent(state, 'diver-launched', { elite: isElite });
+  for (let position = 0; position < groupSize; position += 1) {
+    const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
+    const [diver] = candidates.splice(index, 1);
+    const isElite = random() < eliteChance;
+    if (isElite) eliteCount += 1;
+
+    const verticalSpeed = baseVerticalSpeed
+      * (isElite ? DIVES.eliteVerticalSpeedMultiplier : 1);
+    const maxHorizontalSpeed = DIVES.maxHorizontalSpeed
+      * (isElite ? DIVES.eliteHorizontalSpeedMultiplier : 1);
+    const distanceToPlayer = Math.max(1, state.player.y - diver.y);
+    const travelTime = Math.max(0.6, distanceToPlayer / verticalSpeed);
+    const spreadIndex = position - (groupSize - 1) / 2;
+    const targetCenter = clamp(
+      state.player.x + state.player.width / 2 + spreadIndex * DIVES.groupTargetSpread,
+      WORLD.padding,
+      WORLD.width - WORLD.padding,
+    );
+    const targetOffset = targetCenter - (diver.x + diver.width / 2);
+
+    diver.diving = true;
+    diver.diveType = isElite ? 'elite' : 'standard';
+    diver.velocityX = clamp(targetOffset / travelTime, -maxHorizontalSpeed, maxHorizontalSpeed);
+    diver.velocityY = verticalSpeed;
+  }
+
+  emitEvent(state, 'dive-group-launched', {
+    count: groupSize,
+    elite: eliteCount > 0,
+    eliteCount,
+  });
   scheduleNextDive(state, random);
 }
 
@@ -459,7 +481,7 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
   }
 
   if (input.fire && state.playerShotTimer <= 0) spawnPlayerBullet(state);
-  if (state.diveTimer <= 0) launchDiver(state, random);
+  if (state.diveTimer <= 0) launchDiveGroup(state, random);
 
   moveFormation(state, dt);
   moveDivingInvaders(state, dt);

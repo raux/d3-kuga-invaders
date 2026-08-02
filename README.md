@@ -7,12 +7,12 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Responsive, resolution-independent SVG playfield
 - Keyboard, touchscreen joystick, and finger-drag controls with responsive phone and landscape layouts
 - Five-row enemy formation with edge reversal and descent
-- Standard ×2 divers and faster elite ×5 divers, with up to five simultaneous attacks
+- Standard ×2 and faster elite ×5 divers, including double dives from level 3 and triple dives from level 6
 - Player and enemy projectiles with collision detection
 - Fifteen timed Overdrive stacks that increase score, fire rate, bullet speed, size, and visual power
 - Score, persistent high score, lives, levels, pause, restart, and return-to-title controls
 - Increasing speed and firing pressure across endless waves
-- Synthesized Web Audio for player fire, enemy fire, dives, impacts, and waves, plus optional mobile haptics
+- Synthesized Web Audio for player fire, enemy fire, descending dive drops, impacts, and waves, plus optional mobile haptics
 - Stack-scaled explosions, shockwaves, tier announcements, screen shake, and weapon colors
 - Auto-fire and lower-playfield drag controls for mobile
 - Deterministic game-logic tests with Vitest

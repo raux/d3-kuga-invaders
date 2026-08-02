@@ -80,7 +80,7 @@ Add `barriers` to state as collections of cells. Resolve projectile-to-cell coll
 
 ### Feedback events
 
-The simulation emits short-lived events such as `shot-fired`, `enemy-shot-fired`, `diver-launched`, `enemy-destroyed`, `combo-stack-added`, `combo-tier-increased`, and `player-hit`. Audio and haptic controllers consume them after each update without detecting state differences in the renderer. Future achievements and statistics can subscribe to the same event vocabulary.
+The simulation emits short-lived events such as `shot-fired`, `enemy-shot-fired`, `dive-group-launched`, `enemy-destroyed`, `combo-stack-added`, `combo-tier-increased`, and `player-hit`. Audio and haptic controllers consume them after each update without detecting state differences in the renderer. Future achievements and statistics can subscribe to the same event vocabulary.
 
 ### Fixed timestep
 
