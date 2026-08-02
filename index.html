@@ -2,9 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#07111f" />
     <meta name="description" content="Kuga Invaders, an original arcade game rendered with D3.js and SVG." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kuga Invaders" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png" />
     <title>Kuga Invaders — D3.js Arcade Game</title>
   </head>
   <body>
@@ -14,11 +19,11 @@
           <p class="eyebrow">D3.js orbital defense</p>
           <h1>Kuga Invaders</h1>
         </div>
-        <button id="pause-button" class="quiet-button" type="button" disabled>Pause</button>
+        <button id="pause-button" class="quiet-button" type="button" aria-pressed="false" disabled>Pause</button>
       </header>
 
       <section class="game-console" aria-label="Kuga Invaders game">
-        <div class="hud" aria-live="polite">
+        <div class="hud">
           <div><span>Score</span><strong id="score">00000</strong></div>
           <div><span>Best</span><strong id="high-score">00000</strong></div>
           <div><span>Level</span><strong id="level">01</strong></div>
@@ -29,20 +34,20 @@
           <svg
             id="game-board"
             role="img"
-            aria-label="A player ship defending Earth from a descending alien fleet"
+            aria-label="A player ship defending Kuga from a descending alien fleet"
           ></svg>
 
           <div id="game-overlay" class="game-overlay">
             <div class="overlay-card">
               <p class="status-label">Incoming transmission</p>
               <h2 id="overlay-title">Defend Kuga</h2>
-              <p id="overlay-message">Move with A/D or the arrow keys. Fire with Space.</p>
+              <p id="overlay-message">Move with keyboard or touch controls. Fire to defend Kuga.</p>
               <button id="start-button" class="primary-button" type="button">Start mission</button>
             </div>
           </div>
         </div>
 
-        <div class="mobile-controls" aria-label="Touch controls">
+        <div class="mobile-controls" role="group" aria-label="Touch game controls">
           <button type="button" data-action="left" aria-label="Move left">◀</button>
           <button type="button" data-action="fire" class="fire-control" aria-label="Fire">Fire</button>
           <button type="button" data-action="right" aria-label="Move right">▶</button>
@@ -54,6 +59,10 @@
         <span><kbd>Space</kbd> fires</span>
         <span><kbd>P</kbd> pauses</span>
       </footer>
+
+      <p id="game-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+        Kuga Invaders is ready. Use the controls to start a mission.
+      </p>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

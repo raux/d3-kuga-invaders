@@ -5,14 +5,15 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 ## Features
 
 - Responsive, resolution-independent SVG playfield
-- Keyboard and touch controls
+- Keyboard and multi-touch controls with responsive phone and landscape layouts
 - Five-row enemy formation with edge reversal and descent
 - Player and enemy projectiles with collision detection
 - Score, persistent high score, lives, levels, pause, and restart
 - Increasing speed and firing pressure across endless waves
 - Deterministic game-logic tests with Vitest
+- Installable PWA with home-screen icons and offline shell caching
 - Vite development and production builds
-- GitHub Actions continuous integration
+- GitHub Actions continuous integration and Pages deployment
 
 ## Run locally
 
@@ -30,6 +31,10 @@ npm test        # run game-logic tests
 npm run build   # create the production build in dist/
 npm run preview # preview the build
 ```
+
+## Install on mobile
+
+Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chrome, then choose **Add to Home Screen** or **Install app**. The installed game launches in a standalone window and keeps its application shell available offline after the first successful visit.
 
 ## Controls
 
@@ -68,7 +73,8 @@ Keyboard / touch
 - `src/game/state.js` — state factories and entity identity
 - `src/game/update.js` — simulation and game rules
 - `src/game/collision.js` — geometry helpers
-- `src/game/input.js` — keyboard/touch input abstraction
+- `src/game/input.js` — keyboard input abstraction
+- `src/game/touch-controls.js` — pointer capture and simultaneous touch actions
 - `src/game/renderer.js` — D3/SVG scene renderer
 - `src/game/config.js` — balancing constants
 - `tests/` — deterministic unit tests
@@ -90,7 +96,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for design details and extens
 - UFO bonus encounters
 - Configurable difficulty and reduced-flashing mode
 - End-to-end browser tests
-- GitHub Pages deployment workflow
+- Optional haptic feedback for touch controls
 
 ## Inspiration and licensing
 
