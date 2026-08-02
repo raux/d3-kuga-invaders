@@ -50,16 +50,38 @@
             <div class="overlay-card">
               <p class="status-label">Incoming transmission</p>
               <h2 id="overlay-title">Defend Kuga</h2>
-              <p id="overlay-message">Move with keyboard, buttons, or by dragging. Fire to defend Kuga and dodge diving attackers.</p>
+              <p id="overlay-message">Move with the joystick, keyboard, or by dragging. Fire to defend Kuga and dodge diving attackers.</p>
               <button id="start-button" class="primary-button" type="button">Start mission</button>
             </div>
           </div>
         </div>
 
         <div class="mobile-controls" role="group" aria-label="Touch game controls">
-          <button type="button" data-action="left" aria-label="Move left">◀</button>
-          <button type="button" data-action="fire" class="fire-control" aria-label="Fire">Fire</button>
-          <button type="button" data-action="right" aria-label="Move right">▶</button>
+          <div class="joystick-unit">
+            <div
+              class="joystick-control"
+              data-joystick
+              data-active="false"
+              data-direction="center"
+              role="slider"
+              tabindex="0"
+              aria-label="Move ship horizontally"
+              aria-orientation="horizontal"
+              aria-valuemin="-100"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              aria-valuetext="Centered"
+            >
+              <span class="joystick-arrow joystick-arrow-left" aria-hidden="true">◀</span>
+              <span class="joystick-arrow joystick-arrow-right" aria-hidden="true">▶</span>
+              <span class="joystick-knob" aria-hidden="true"><span></span></span>
+            </div>
+            <span class="control-label" aria-hidden="true">Move</span>
+          </div>
+          <button type="button" data-action="fire" class="fire-control" aria-label="Fire">
+            <span class="fire-icon" aria-hidden="true">▲</span>
+            <span class="control-label" aria-hidden="true">Fire</span>
+          </button>
         </div>
       </section>
 

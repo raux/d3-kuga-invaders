@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { bindActionButtons, bindDragControl } from '../src/game/touch-controls.js';
+import { bindActionButtons, bindDragControl, bindJoystick } from '../src/game/touch-controls.js';
 
 class TestButton extends EventTarget {
   constructor(action) {
@@ -7,6 +7,7 @@ class TestButton extends EventTarget {
     this.dataset = { action };
     this.attributes = new Map();
     this.capturedPointers = new Set();
+    this.style = {};
   }
 
   setAttribute(name, value) {
@@ -65,6 +66,35 @@ describe('touch controls', () => {
 
     left.dispatchEvent(pointerEvent('pointerup', 1));
     expect(active).toEqual(new Set(['fire']));
+  });
+
+  it('uses a dead zone and switches joystick direction while dragging', () => {
+    const joystick = new TestButton();
+    const knob = new TestButton();
+    joystick.querySelector = () => knob;
+    joystick.getBoundingClientRect = () => ({ left: 0, width: 200, height: 82 });
+    knob.getBoundingClientRect = () => ({ width: 62 });
+    const input = { setAction: vi.fn() };
+    bindJoystick(joystick, input);
+
+    joystick.dispatchEvent(pointerEvent('pointerdown', 3, 110));
+    expect(input.setAction).not.toHaveBeenCalled();
+    expect(joystick.getAttribute('aria-valuetext')).toBe('Centered');
+
+    joystick.dispatchEvent(pointerEvent('pointermove', 3, 180));
+    expect(input.setAction).toHaveBeenLastCalledWith('right', true);
+    expect(joystick.dataset.direction).toBe('right');
+    expect(joystick.capturedPointers.has(3)).toBe(true);
+
+    joystick.dispatchEvent(pointerEvent('pointermove', 3, 40));
+    expect(input.setAction).toHaveBeenNthCalledWith(2, 'right', false);
+    expect(input.setAction).toHaveBeenNthCalledWith(3, 'left', true);
+    expect(joystick.dataset.direction).toBe('left');
+
+    joystick.dispatchEvent(pointerEvent('pointerup', 3, 40));
+    expect(input.setAction).toHaveBeenLastCalledWith('left', false);
+    expect(joystick.dataset.direction).toBe('center');
+    expect(knob.style.transform).toBe('translate3d(0px, 0, 0)');
   });
 
   it('maps a horizontal drag to world coordinates and clears it on release', () => {

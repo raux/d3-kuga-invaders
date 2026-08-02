@@ -3,7 +3,7 @@ import { WORLD } from './game/config.js';
 import { createInput } from './game/input.js';
 import { createRenderer } from './game/renderer.js';
 import { createInitialState, startNewGame } from './game/state.js';
-import { bindActionButtons, bindDragControl } from './game/touch-controls.js';
+import { bindActionButtons, bindDragControl, bindJoystick } from './game/touch-controls.js';
 import { stepGame } from './game/update.js';
 
 const HIGH_SCORE_KEY = 'd3-space-invaders-high-score';
@@ -64,7 +64,7 @@ function updateInterface() {
 
     if (state.mode === 'ready') {
       overlayTitle.textContent = 'Defend Kuga';
-      overlayMessage.textContent = 'Move with keyboard, buttons, or by dragging. Fire to defend Kuga and dodge diving attackers.';
+      overlayMessage.textContent = 'Move with the joystick, keyboard, or by dragging. Fire to defend Kuga and dodge diving attackers.';
       startButton.textContent = 'Start mission';
     } else if (state.mode === 'paused') {
       overlayTitle.textContent = 'Mission paused';
@@ -87,6 +87,7 @@ startButton.addEventListener('click', () => {
 pauseButton.addEventListener('click', togglePause);
 
 bindActionButtons(document.querySelectorAll('[data-action]'), input);
+bindJoystick(document.querySelector('[data-joystick]'), input);
 bindDragControl(svg, input, WORLD.width);
 
 function frame(timestamp) {
