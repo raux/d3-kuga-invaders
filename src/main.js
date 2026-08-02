@@ -150,7 +150,7 @@ function updateInterface() {
 
     if (state.mode === 'ready') {
       overlayTitle.textContent = 'Defend Kuga';
-      overlayMessage.textContent = 'Move with the joystick, keyboard, or by dragging in the lower playfield. Fire to defend Kuga and dodge diving attackers.';
+      overlayMessage.textContent = 'Move in four directions with the joystick or keyboard, or drag horizontally in the lower playfield. Fire to defend Kuga and dodge diving attackers.';
       startButton.textContent = 'Start mission';
     } else if (state.mode === 'paused') {
       overlayTitle.textContent = 'Mission paused';

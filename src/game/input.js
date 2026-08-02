@@ -3,6 +3,10 @@ const KEY_TO_ACTION = new Map([
   ['KeyA', 'left'],
   ['ArrowRight', 'right'],
   ['KeyD', 'right'],
+  ['ArrowUp', 'up'],
+  ['KeyW', 'up'],
+  ['ArrowDown', 'down'],
+  ['KeyS', 'down'],
   ['Space', 'fire'],
 ]);
 
@@ -59,6 +63,8 @@ export function createInput(target = window) {
     return {
       left: held.has('left'),
       right: held.has('right'),
+      up: held.has('up'),
+      down: held.has('down'),
       fire: held.has('fire'),
       targetX,
     };

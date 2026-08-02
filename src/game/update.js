@@ -396,6 +396,7 @@ function damagePlayer(state) {
   }
 
   state.player.x = (WORLD.width - PLAYER.width) / 2;
+  state.player.y = PLAYER.y;
   state.invulnerabilityTimer = PLAYER.invulnerabilitySeconds;
 }
 
@@ -474,13 +475,20 @@ export function stepGame(state, deltaSeconds, input, random = Math.random) {
       WORLD.width - WORLD.padding - state.player.width,
     );
   } else {
-    const movement = Number(Boolean(input.right)) - Number(Boolean(input.left));
+    const horizontalMovement = Number(Boolean(input.right)) - Number(Boolean(input.left));
     state.player.x = clamp(
-      state.player.x + movement * PLAYER.speed * dt,
+      state.player.x + horizontalMovement * PLAYER.speed * dt,
       WORLD.padding,
       WORLD.width - WORLD.padding - state.player.width,
     );
   }
+
+  const verticalMovement = Number(Boolean(input.down)) - Number(Boolean(input.up));
+  state.player.y = clamp(
+    state.player.y + verticalMovement * PLAYER.verticalSpeed * dt,
+    PLAYER.minY,
+    PLAYER.maxY,
+  );
 
   if (input.fire && state.playerShotTimer <= 0) spawnPlayerBullet(state);
   if (state.diveTimer <= 0) launchDiveGroup(state, random);

@@ -5,7 +5,7 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 ## Features
 
 - Responsive, resolution-independent SVG playfield
-- Keyboard, touchscreen joystick, and finger-drag controls with responsive phone and landscape layouts
+- Keyboard, two-axis touchscreen joystick, bounded vertical movement, and horizontal finger-drag controls
 - Five-row anime-inspired enemy formation with expressive eyes, blinking, body motion, and dive animation
 - Standard ×2 and faster elite ×5 divers, including double dives from level 3 and triple dives from level 6
 - Player and enemy projectiles with collision detection
@@ -45,7 +45,7 @@ Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chro
 
 | Action | Keyboard | Touch |
 | --- | --- | --- |
-| Move | `A`/`D` or `←`/`→` | Drag the lower playfield or use the horizontal joystick |
+| Move | `W`/`A`/`S`/`D` or arrow keys | Use the two-axis joystick; drag the lower playfield for horizontal movement |
 | Fire | `Space` | Fire button or Auto toggle |
 | Pause/resume | `P` or `Escape` | Pause button |
 
@@ -84,7 +84,7 @@ Keyboard / touch
 - `src/game/update.js` — simulation and game rules
 - `src/game/collision.js` — geometry helpers
 - `src/game/input.js` — keyboard input abstraction
-- `src/game/touch-controls.js` — pointer capture, joystick dead-zone handling, and simultaneous touch actions
+- `src/game/touch-controls.js` — two-axis joystick, diagonal input, pointer capture, dead-zone handling, and simultaneous touch actions
 - `src/game/audio.js` — original synthesized Web Audio feedback
 - `src/game/haptics.js` — optional mobile vibration patterns
 - `src/game/renderer.js` — D3/SVG scene renderer and transient visual effects

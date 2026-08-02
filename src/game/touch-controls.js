@@ -75,47 +75,90 @@ export function bindJoystick(control, input, { deadZone = 0.22 } = {}) {
   if (!control) return () => {};
 
   const knob = control.querySelector('.joystick-knob');
+  const movementActions = ['left', 'right', 'up', 'down'];
+  const keyActions = new Map([
+    ['arrowleft', 'left'],
+    ['a', 'left'],
+    ['arrowright', 'right'],
+    ['d', 'right'],
+    ['arrowup', 'up'],
+    ['w', 'up'],
+    ['arrowdown', 'down'],
+    ['s', 'down'],
+  ]);
   let activePointerId = null;
-  let activeDirection = null;
+  let activeDirections = new Set();
+  let pointerDirections = new Set();
+  const keyboardDirections = new Set();
+  let pointerAxes = { x: 0, y: 0 };
 
-  function setDirection(direction) {
-    if (direction === activeDirection) return;
-
-    if (activeDirection) input.setAction(activeDirection, false);
-    activeDirection = direction;
-    if (activeDirection) input.setAction(activeDirection, true);
+  function syncDirections() {
+    const nextDirections = new Set([...pointerDirections, ...keyboardDirections]);
+    movementActions.forEach((action) => {
+      if (activeDirections.has(action) !== nextDirections.has(action)) {
+        input.setAction(action, nextDirections.has(action));
+      }
+    });
+    activeDirections = nextDirections;
   }
 
-  function updatePresentation(value, direction) {
+  function directionLabel(directions) {
+    const vertical = directions.has('up') ? 'up' : directions.has('down') ? 'down' : '';
+    const horizontal = directions.has('left') ? 'left' : directions.has('right') ? 'right' : '';
+    if (!vertical && !horizontal) return 'Centered';
+    return `Moving ${[vertical, horizontal].filter(Boolean).join(' and ')}`;
+  }
+
+  function updatePresentation(xValue, yValue) {
     const bounds = control.getBoundingClientRect();
-    const knobWidth = knob?.getBoundingClientRect().width || Math.min(bounds.height || 64, 64);
-    const maxTravel = Math.max(0, (bounds.width - knobWidth) / 2 - 10);
-    const offset = value * maxTravel;
+    const knobBounds = knob?.getBoundingClientRect() || {};
+    const fallbackSize = Math.min(bounds.width || 58, bounds.height || 58, 58);
+    const knobWidth = knobBounds.width || fallbackSize;
+    const knobHeight = knobBounds.height || fallbackSize;
+    const maxTravelX = Math.max(0, (bounds.width - knobWidth) / 2 - 10);
+    const maxTravelY = Math.max(0, (bounds.height - knobHeight) / 2 - 10);
+    const combinedDirections = new Set([...pointerDirections, ...keyboardDirections]);
 
-    if (knob) knob.style.transform = `translate3d(${offset}px, 0, 0)`;
-    control.dataset.direction = direction || 'center';
-    control.setAttribute('aria-valuenow', String(Math.round(value * 100)));
-    control.setAttribute(
-      'aria-valuetext',
-      direction === 'left' ? 'Moving left' : direction === 'right' ? 'Moving right' : 'Centered',
-    );
+    if (knob) {
+      knob.style.transform = `translate3d(${xValue * maxTravelX}px, ${yValue * maxTravelY}px, 0)`;
+    }
+    control.dataset.horizontal = combinedDirections.has('left')
+      ? 'left'
+      : combinedDirections.has('right') ? 'right' : 'center';
+    control.dataset.vertical = combinedDirections.has('up')
+      ? 'up'
+      : combinedDirections.has('down') ? 'down' : 'center';
+    control.dataset.direction = directionLabel(combinedDirections).toLowerCase().replace('moving ', '').replaceAll(' ', '-');
+    control.setAttribute('aria-label', `Two-axis ship joystick. ${directionLabel(combinedDirections)}.`);
   }
 
-  function update(event) {
+  function updateFromPointer(event) {
     const bounds = control.getBoundingClientRect();
-    if (bounds.width <= 0) return;
+    if (bounds.width <= 0 || bounds.height <= 0) return;
 
-    const center = bounds.left + bounds.width / 2;
-    const value = Math.max(-1, Math.min(1, (event.clientX - center) / (bounds.width / 2)));
-    const direction = value < -deadZone ? 'left' : value > deadZone ? 'right' : null;
-    setDirection(direction);
-    updatePresentation(value, direction);
+    let xValue = (event.clientX - (bounds.left + bounds.width / 2)) / (bounds.width / 2);
+    let yValue = (event.clientY - (bounds.top + bounds.height / 2)) / (bounds.height / 2);
+    const magnitude = Math.hypot(xValue, yValue);
+    if (magnitude > 1) {
+      xValue /= magnitude;
+      yValue /= magnitude;
+    }
+
+    pointerDirections = new Set();
+    if (xValue < -deadZone) pointerDirections.add('left');
+    else if (xValue > deadZone) pointerDirections.add('right');
+    if (yValue < -deadZone) pointerDirections.add('up');
+    else if (yValue > deadZone) pointerDirections.add('down');
+    pointerAxes = { x: xValue, y: yValue };
+    syncDirections();
+    updatePresentation(xValue, yValue);
   }
 
-  function reset() {
-    setDirection(null);
-    control.dataset.active = 'false';
-    updatePresentation(0, null);
+  function keyboardAxes() {
+    return {
+      x: Number(keyboardDirections.has('right')) - Number(keyboardDirections.has('left')),
+      y: Number(keyboardDirections.has('down')) - Number(keyboardDirections.has('up')),
+    };
   }
 
   function start(event) {
@@ -124,7 +167,7 @@ export function bindJoystick(control, input, { deadZone = 0.22 } = {}) {
     event.preventDefault();
     activePointerId = event.pointerId;
     control.dataset.active = 'true';
-    update(event);
+    updateFromPointer(event);
 
     if (control.setPointerCapture) {
       try {
@@ -138,28 +181,51 @@ export function bindJoystick(control, input, { deadZone = 0.22 } = {}) {
   function move(event) {
     if (event.pointerId !== activePointerId) return;
     event.preventDefault();
-    update(event);
+    updateFromPointer(event);
   }
 
   function stop(event) {
     if (event.pointerId !== activePointerId) return;
     event.preventDefault();
     activePointerId = null;
-    reset();
+    pointerDirections.clear();
+    pointerAxes = { x: 0, y: 0 };
+    syncDirections();
+    control.dataset.active = String(keyboardDirections.size > 0);
+    const axes = keyboardAxes();
+    updatePresentation(axes.x, axes.y);
   }
 
   function keyDown(event) {
-    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    const action = keyActions.get(event.key.toLowerCase());
+    if (!action) return;
     event.preventDefault();
-    const direction = event.key === 'ArrowLeft' ? 'left' : 'right';
-    setDirection(direction);
-    updatePresentation(direction === 'left' ? -1 : 1, direction);
+    keyboardDirections.add(action);
+    syncDirections();
+    control.dataset.active = 'true';
+    const axes = activePointerId === null ? keyboardAxes() : pointerAxes;
+    updatePresentation(axes.x, axes.y);
   }
 
   function keyUp(event) {
-    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    const action = keyActions.get(event.key.toLowerCase());
+    if (!action) return;
     event.preventDefault();
-    reset();
+    keyboardDirections.delete(action);
+    syncDirections();
+    control.dataset.active = String(activePointerId !== null || keyboardDirections.size > 0);
+    const axes = activePointerId === null ? keyboardAxes() : pointerAxes;
+    updatePresentation(axes.x, axes.y);
+  }
+
+  function reset() {
+    activePointerId = null;
+    pointerDirections.clear();
+    keyboardDirections.clear();
+    pointerAxes = { x: 0, y: 0 };
+    syncDirections();
+    control.dataset.active = 'false';
+    updatePresentation(0, 0);
   }
 
   const listeners = [
@@ -173,13 +239,11 @@ export function bindJoystick(control, input, { deadZone = 0.22 } = {}) {
   ];
   const preventContextMenu = (event) => event.preventDefault();
 
-  control.dataset.active = 'false';
   reset();
   listeners.forEach(([type, listener]) => control.addEventListener(type, listener));
   control.addEventListener('contextmenu', preventContextMenu);
 
   return () => {
-    activePointerId = null;
     reset();
     listeners.forEach(([type, listener]) => control.removeEventListener(type, listener));
     control.removeEventListener('contextmenu', preventContextMenu);

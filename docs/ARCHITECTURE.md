@@ -64,7 +64,7 @@ No external sprite sheets are required.
 
 ## Accessibility and input
 
-The playfield has an accessible label, while game status is represented in HTML around the SVG. Buttons have explicit labels, pressed states, large touch targets, and visible focus states. Keyboard controls prevent scrolling only for keys used during play. Touch controls appear on small or coarse-pointer devices. The horizontal joystick exposes slider semantics, a dead zone, pointer capture, and a visible center-return state; players can move with it or drag the lower playfield while firing with a second finger. Auto-fire, synthesized sound, and haptics are independently toggleable, and reduced-motion preferences disable shake and transient particle animation.
+The playfield has an accessible label, while game status is represented in HTML around the SVG. Buttons have explicit labels, pressed states, large touch targets, and visible focus states. Keyboard controls prevent scrolling only for keys used during play. Touch controls appear on small or coarse-pointer devices. The two-axis joystick supports diagonal movement, independent horizontal and vertical dead zones, pointer capture, keyboard focus, directional announcements, and a visible center-return state. Vertical movement is intentionally constrained to a narrow defense band; lower-playfield dragging remains horizontal so it does not conflict with aiming. Auto-fire, synthesized sound, and haptics are independently toggleable, and reduced-motion preferences disable shake and transient particle animation.
 
 A dedicated polite live region announces mode changes without wrapping the frequently updated score HUD. The SVG describes the game at a high level rather than announcing every moving entity, because continuous frame-by-frame updates would overwhelm assistive technology. Responsive styles account for dynamic viewport height, device safe areas, portrait mode, and short landscape screens.
 
@@ -92,7 +92,7 @@ Because rules do not import D3, a Canvas or WebGL renderer can consume the same 
 
 ## Testing strategy
 
-Unit tests cover state creation, world bounds, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, row-specific explosion recipes, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
+Unit tests cover state creation, horizontal and vertical world bounds, two-axis joystick diagonals, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, row-specific explosion recipes, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
 
 - Property tests for collision symmetry and world bounds
 - Browser tests for keyboard/touch interaction

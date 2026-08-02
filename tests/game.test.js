@@ -4,7 +4,13 @@ import { BULLETS, COMBO, DIVES, FEEDBACK, INVADERS, PLAYER, SCORING, WORLD } fro
 import { createInitialState, startNewGame } from '../src/game/state.js';
 import { stepGame } from '../src/game/update.js';
 
-const idleInput = { left: false, right: false, fire: false };
+const idleInput = {
+  left: false,
+  right: false,
+  up: false,
+  down: false,
+  fire: false,
+};
 
 describe('game state', () => {
   it('creates a complete five-by-ten invader formation', () => {
@@ -41,6 +47,22 @@ describe('game update', () => {
     state.player.x = WORLD.width - WORLD.padding - state.player.width;
     stepGame(state, 1, { ...idleInput, right: true });
     expect(state.player.x).toBe(WORLD.width - WORLD.padding - state.player.width);
+  });
+
+  it('allows limited vertical movement while keeping the ship in its defense band', () => {
+    const state = startNewGame();
+    const startingY = state.player.y;
+
+    stepGame(state, 0.05, { ...idleInput, up: true });
+    expect(state.player.y).toBe(startingY - PLAYER.verticalSpeed * 0.05);
+
+    state.player.y = PLAYER.minY;
+    stepGame(state, 1, { ...idleInput, up: true });
+    expect(state.player.y).toBe(PLAYER.minY);
+
+    state.player.y = PLAYER.maxY;
+    stepGame(state, 1, { ...idleInput, down: true });
+    expect(state.player.y).toBe(PLAYER.maxY);
   });
 
   it('positions the player under a drag target', () => {
@@ -159,6 +181,7 @@ describe('game update', () => {
 
   it('loses one ship when a diving invader crashes into the player', () => {
     const state = startNewGame();
+    state.player.y = PLAYER.minY;
     const diver = state.invaders[0];
     Object.assign(diver, {
       diving: true,
@@ -174,6 +197,7 @@ describe('game update', () => {
     stepGame(state, 0, idleInput);
 
     expect(state.lives).toBe(PLAYER.startingLives - 1);
+    expect(state.player.y).toBe(PLAYER.y);
     expect(state.combo.stacks).toBe(0);
     expect(state.invaders.some((invader) => invader.id === diver.id)).toBe(false);
     expect(state.invulnerabilityTimer).toBe(PLAYER.invulnerabilitySeconds);

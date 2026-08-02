@@ -7,8 +7,11 @@ export const WORLD = Object.freeze({
 export const PLAYER = Object.freeze({
   width: 56,
   height: 28,
-  y: 574,
+  y: 558,
+  minY: 518,
+  maxY: 586,
   speed: 430,
+  verticalSpeed: 250,
   shotCooldown: 0.24,
   invulnerabilitySeconds: 1.15,
   startingLives: 3,

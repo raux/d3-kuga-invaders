@@ -33,6 +33,12 @@ function pointerEvent(type, pointerId, clientX = 0, clientY = 0) {
   return event;
 }
 
+function keyEvent(type, key) {
+  const event = new Event(type, { cancelable: true });
+  Object.defineProperty(event, 'key', { value: key });
+  return event;
+}
+
 describe('touch controls', () => {
   it('captures and releases a held action', () => {
     const left = new TestButton('left');
@@ -69,33 +75,62 @@ describe('touch controls', () => {
     expect(active).toEqual(new Set(['fire']));
   });
 
-  it('uses a dead zone and switches joystick direction while dragging', () => {
+  it('supports diagonal two-axis joystick movement with a dead zone', () => {
     const joystick = new TestButton();
     const knob = new TestButton();
+    const active = new Set();
     joystick.querySelector = () => knob;
-    joystick.getBoundingClientRect = () => ({ left: 0, width: 200, height: 82 });
-    knob.getBoundingClientRect = () => ({ width: 62 });
-    const input = { setAction: vi.fn() };
+    joystick.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 120 });
+    knob.getBoundingClientRect = () => ({ width: 58, height: 58 });
+    const input = {
+      setAction(action, enabled) {
+        if (enabled) active.add(action);
+        else active.delete(action);
+      },
+    };
     bindJoystick(joystick, input);
 
-    joystick.dispatchEvent(pointerEvent('pointerdown', 3, 110));
-    expect(input.setAction).not.toHaveBeenCalled();
-    expect(joystick.getAttribute('aria-valuetext')).toBe('Centered');
+    joystick.dispatchEvent(pointerEvent('pointerdown', 3, 105, 62));
+    expect(active).toEqual(new Set());
+    expect(joystick.getAttribute('aria-label')).toContain('Centered');
 
-    joystick.dispatchEvent(pointerEvent('pointermove', 3, 180));
-    expect(input.setAction).toHaveBeenLastCalledWith('right', true);
-    expect(joystick.dataset.direction).toBe('right');
+    joystick.dispatchEvent(pointerEvent('pointermove', 3, 180, 15));
+    expect(active).toEqual(new Set(['right', 'up']));
+    expect(joystick.dataset.horizontal).toBe('right');
+    expect(joystick.dataset.vertical).toBe('up');
     expect(joystick.capturedPointers.has(3)).toBe(true);
 
-    joystick.dispatchEvent(pointerEvent('pointermove', 3, 40));
-    expect(input.setAction).toHaveBeenNthCalledWith(2, 'right', false);
-    expect(input.setAction).toHaveBeenNthCalledWith(3, 'left', true);
-    expect(joystick.dataset.direction).toBe('left');
+    joystick.dispatchEvent(pointerEvent('pointermove', 3, 20, 105));
+    expect(active).toEqual(new Set(['left', 'down']));
+    expect(joystick.getAttribute('aria-label')).toContain('down and left');
 
-    joystick.dispatchEvent(pointerEvent('pointerup', 3, 40));
-    expect(input.setAction).toHaveBeenLastCalledWith('left', false);
-    expect(joystick.dataset.direction).toBe('center');
-    expect(knob.style.transform).toBe('translate3d(0px, 0, 0)');
+    joystick.dispatchEvent(pointerEvent('pointerup', 3, 20, 105));
+    expect(active).toEqual(new Set());
+    expect(joystick.dataset.direction).toBe('centered');
+    expect(knob.style.transform).toBe('translate3d(0px, 0px, 0)');
+  });
+
+  it('supports diagonal keyboard input while the joystick is focused', () => {
+    const joystick = new TestButton();
+    const knob = new TestButton();
+    const active = new Set();
+    joystick.querySelector = () => knob;
+    joystick.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 120 });
+    knob.getBoundingClientRect = () => ({ width: 58, height: 58 });
+    bindJoystick(joystick, {
+      setAction(action, enabled) {
+        if (enabled) active.add(action);
+        else active.delete(action);
+      },
+    });
+
+    joystick.dispatchEvent(keyEvent('keydown', 'ArrowUp'));
+    joystick.dispatchEvent(keyEvent('keydown', 'ArrowRight'));
+    expect(active).toEqual(new Set(['up', 'right']));
+
+    joystick.dispatchEvent(keyEvent('keyup', 'ArrowUp'));
+    joystick.dispatchEvent(keyEvent('keyup', 'ArrowRight'));
+    expect(active).toEqual(new Set());
   });
 
   it('starts lower-playfield dragging only from the bottom half', () => {
