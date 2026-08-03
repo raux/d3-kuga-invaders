@@ -42,7 +42,7 @@ const restartButton = document.querySelector('#restart-button');
 const quitButton = document.querySelector('#quit-button');
 const pauseButton = document.querySelector('#pause-button');
 const soundButton = document.querySelector('#sound-button');
-const autoFireButton = document.querySelector('#auto-fire-button');
+const autoFireButtons = document.querySelectorAll('[data-auto-fire]');
 const hapticsButton = document.querySelector('#haptics-button');
 const gameStatus = document.querySelector('#game-status');
 
@@ -101,8 +101,13 @@ function updateSettingsInterface() {
   soundButton.setAttribute('aria-pressed', String(soundEnabled));
   soundButton.textContent = soundEnabled ? 'Sound on' : 'Sound off';
 
-  autoFireButton.setAttribute('aria-pressed', String(autoFireEnabled));
-  autoFireButton.setAttribute('aria-label', `Auto-fire ${autoFireEnabled ? 'on' : 'off'}`);
+  autoFireButtons.forEach((button) => {
+    button.setAttribute('aria-pressed', String(autoFireEnabled));
+    button.setAttribute('aria-label', `Auto-fire ${autoFireEnabled ? 'on' : 'off'}`);
+    if (button.id === 'desktop-auto-fire-button') {
+      button.textContent = `Auto fire ${autoFireEnabled ? 'on' : 'off'}`;
+    }
+  });
 
   hapticsButton.disabled = !haptics.isAvailable;
   hapticsButton.setAttribute('aria-pressed', String(hapticsEnabled && haptics.isAvailable));
@@ -190,10 +195,12 @@ soundButton.addEventListener('click', async () => {
   if (soundEnabled) await audio.unlock();
   updateSettingsInterface();
 });
-autoFireButton.addEventListener('click', () => {
-  autoFireEnabled = !autoFireEnabled;
-  localStorage.setItem(AUTO_FIRE_KEY, String(autoFireEnabled));
-  updateSettingsInterface();
+autoFireButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    autoFireEnabled = !autoFireEnabled;
+    localStorage.setItem(AUTO_FIRE_KEY, String(autoFireEnabled));
+    updateSettingsInterface();
+  });
 });
 hapticsButton.addEventListener('click', () => {
   if (!haptics.isAvailable) return;

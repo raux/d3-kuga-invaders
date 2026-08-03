@@ -20,6 +20,14 @@
           <h1>Kuga Invaders</h1>
         </div>
         <div class="masthead-actions">
+          <button
+            id="desktop-auto-fire-button"
+            class="quiet-button desktop-auto-fire-button"
+            type="button"
+            data-auto-fire
+            aria-pressed="false"
+            aria-label="Auto-fire off"
+          >Auto fire off</button>
           <button id="sound-button" class="quiet-button" type="button" aria-pressed="true">Sound on</button>
           <button id="pause-button" class="quiet-button" type="button" aria-pressed="false" disabled>Pause</button>
         </div>
@@ -111,7 +119,7 @@
               <span class="control-label" aria-hidden="true">Fire</span>
             </button>
             <div class="mobile-options" aria-label="Mobile control options">
-              <button id="auto-fire-button" class="toggle-control" type="button" aria-pressed="false" aria-label="Auto-fire off">Auto</button>
+              <button id="auto-fire-button" class="toggle-control" type="button" data-auto-fire aria-pressed="false" aria-label="Auto-fire off">Auto</button>
               <button id="haptics-button" class="toggle-control" type="button" aria-pressed="true" aria-label="Haptics on">Vibe</button>
             </div>
           </div>

@@ -14,7 +14,7 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Increasing speed and firing pressure across endless waves
 - Synthesized Web Audio with row-specific enemy voices, layered explosions, enemy fire, descending dive drops, and wave cues
 - Stack-scaled explosions, shockwaves, tier announcements, screen shake, and weapon colors
-- Auto-fire and lower-playfield drag controls for mobile
+- Auto-fire controls for desktop and mobile, plus lower-playfield drag controls for mobile
 - Deterministic game-logic tests with Vitest
 - Installable PWA with home-screen icons and offline shell caching
 - Vite development and production builds
@@ -46,7 +46,7 @@ Open [Kuga Invaders](https://raux.github.io/d3-kuga-invaders/) in Safari or Chro
 | Action | Keyboard | Touch |
 | --- | --- | --- |
 | Move | `W`/`A`/`S`/`D` or arrow keys | Use the two-axis joystick; drag the lower playfield for horizontal movement |
-| Fire | `Space` | Fire button or Auto toggle |
+| Fire | `Space` or the Auto Fire button | Fire button or Auto toggle |
 | Pause/resume | `P` or `Escape` | Pause button |
 
 ## Scoring

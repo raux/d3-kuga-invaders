@@ -454,6 +454,12 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.8rem); }
 }
 .primary-button { min-height: 48px; padding: 12px 20px; color: #021017; background: var(--cyan); }
 .quiet-button { min-height: 44px; padding: 9px 15px; }
+.desktop-auto-fire-button[aria-pressed='true'] {
+  border-color: var(--mint);
+  color: #062219;
+  background: var(--mint);
+  box-shadow: 0 0 14px rgba(115, 255, 186, 0.3);
+}
 button:hover:not(:disabled) { border-color: var(--cyan); transform: translateY(-1px); }
 button:focus-visible { outline: 3px solid rgba(106, 236, 255, 0.42); outline-offset: 3px; }
 button:disabled { cursor: not-allowed; opacity: 0.4; }
@@ -643,6 +649,7 @@ kbd { display: inline-block; min-width: 1.6rem; margin: 0 2px; padding: 2px 5px;
     padding-left: max(8px, env(safe-area-inset-left));
   }
   .masthead { align-items: center; gap: 12px; margin-bottom: 12px; }
+  .desktop-auto-fire-button { display: none; }
   .eyebrow { font-size: 0.62rem; letter-spacing: 0.16em; }
   h1 { font-size: clamp(2rem, 11vw, 3.2rem); }
   .game-console { border-radius: 14px; }
