@@ -1,0 +1,8 @@
+{
+  "firestore": [
+    {
+      "database": "kugaleaderboard",
+      "rules": "firebase/firestore.rules"
+    }
+  ]
+}

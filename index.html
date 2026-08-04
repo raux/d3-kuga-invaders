@@ -126,6 +126,33 @@
         </div>
       </section>
 
+      <section id="leaderboard-panel" class="leaderboard-panel" aria-labelledby="leaderboard-title" data-state="loading">
+        <div class="leaderboard-copy">
+          <p class="eyebrow">Global defense network</p>
+          <h2 id="leaderboard-title">Top 5 pilots</h2>
+          <p>Save your best mission score, level, and date with a public callsign.</p>
+          <form id="leaderboard-form" class="leaderboard-form">
+            <label for="player-name">Callsign</label>
+            <div class="leaderboard-form-controls">
+              <input
+                id="player-name"
+                name="playerName"
+                type="text"
+                maxlength="16"
+                autocomplete="nickname"
+                placeholder="Kuga Pilot"
+                aria-describedby="leaderboard-message"
+              />
+              <button id="save-score-button" class="primary-button" type="submit" disabled>Save best</button>
+            </div>
+          </form>
+          <p id="leaderboard-message" class="leaderboard-message" role="status" aria-live="polite">Connecting to the leaderboard…</p>
+        </div>
+        <ol id="leaderboard-list" class="leaderboard-list" aria-label="Global top five scores">
+          <li class="leaderboard-placeholder">Loading scores…</li>
+        </ol>
+      </section>
+
       <footer class="instructions">
         <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys move</span>
         <span><kbd>Space</kbd> fires</span>

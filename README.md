@@ -15,6 +15,7 @@ An original Space Invaders-style browser game built with **JavaScript, D3.js, an
 - Synthesized Web Audio with row-specific enemy voices, layered explosions, enemy fire, descending dive drops, and wave cues
 - Stack-scaled explosions, shockwaves, tier announcements, screen shake, and weapon colors
 - Auto-fire controls for desktop and mobile, plus lower-playfield drag controls for mobile
+- Optional Firebase-backed global Top 5 leaderboard with anonymous callsigns, best score, level, and server date
 - Deterministic game-logic tests with Vitest
 - Installable PWA with home-screen icons and offline shell caching
 - Vite development and production builds
@@ -36,6 +37,8 @@ npm test        # run game-logic tests
 npm run build   # create the production build in dist/
 npm run preview # preview the build
 ```
+
+The game runs without Firebase and keeps the high score locally. To enable the online Top 5 leaderboard, configure Firebase Anonymous Authentication and Cloud Firestore using [`firebase/README.md`](firebase/README.md) and copy `.env.example` to `.env.local`.
 
 ## Install on mobile
 
@@ -89,6 +92,8 @@ Keyboard / touch
 - `src/game/haptics.js` — optional mobile vibration patterns
 - `src/game/renderer.js` — D3/SVG scene renderer and transient visual effects
 - `src/game/config.js` — balancing constants
+- `src/leaderboard/` — Firebase configuration, score validation, and leaderboard persistence
+- `firebase/firestore.rules` — public-read, owner-write leaderboard rules
 - `tests/` — deterministic unit tests
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for design details and extension points.

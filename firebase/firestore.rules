@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{playerId} {
+      allow read: if true;
+
+      allow create: if isPlayer(playerId)
+        && validScoreRecord()
+        && request.resource.data.bestScore > 0;
+
+      allow update: if isPlayer(playerId)
+        && validScoreRecord()
+        && request.resource.data.bestScore >= resource.data.bestScore;
+
+      allow delete: if false;
+    }
+
+    function isPlayer(playerId) {
+      return request.auth != null && request.auth.uid == playerId;
+    }
+
+    function validScoreRecord() {
+      return request.resource.data.keys().hasOnly([
+          'displayName',
+          'bestScore',
+          'bestLevel',
+          'updatedAt'
+        ])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 1
+        && request.resource.data.displayName.size() <= 16
+        && request.resource.data.bestScore is int
+        && request.resource.data.bestScore >= 0
+        && request.resource.data.bestScore <= 999999999
+        && (request.resource.data.bestLevel == null
+          || (request.resource.data.bestLevel is int
+            && request.resource.data.bestLevel >= 1
+            && request.resource.data.bestLevel <= 9999))
+        && request.resource.data.updatedAt == request.time;
+    }
+  }
+}

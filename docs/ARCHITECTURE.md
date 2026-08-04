@@ -14,6 +14,7 @@ Each animation frame follows one direction of data flow:
 4. `renderer.js` reconciles state with SVG through keyed D3 joins.
 5. `audio.js` and `haptics.js` consume transient simulation events.
 6. `main.js` synchronizes the HTML HUD and saves changed scores and preferences.
+7. At game-over, `main.js` can submit the local best score through the optional Firebase leaderboard service.
 
 The renderer never writes to game state. This boundary keeps core rules runnable under Node.js and prevents SVG transitions from becoming a second source of truth.
 
@@ -68,6 +69,12 @@ The playfield has an accessible label, while game status is represented in HTML 
 
 A dedicated polite live region announces mode changes without wrapping the frequently updated score HUD. The SVG describes the game at a high level rather than announcing every moving entity, because continuous frame-by-frame updates would overwhelm assistive technology. Responsive styles account for dynamic viewport height, device safe areas, portrait mode, and short landscape screens.
 
+## Online leaderboard
+
+The leaderboard is an optional boundary outside the game simulation. `src/leaderboard/leaderboard.js` normalizes callsigns, scores, levels, and dates, while `firebase-service.js` is loaded only when a complete Firebase Web configuration is present. Anonymous Firebase Authentication assigns one writable leaderboard document per browser identity. Cloud Firestore stores each best score with its corresponding level and a server timestamp, then serves a public query ordered by `bestScore` and limited to five records.
+
+If Firebase is missing or unavailable, gameplay and the local high score continue to work. Firestore Security Rules validate record shape and owner-only writes, but they do not make the client-authoritative score cheat-proof.
+
 ## Progressive web app
 
 The production build registers `public/sw.js` under Vite's configured base path. The service worker uses network-first navigation and caches the application shell plus fetched same-origin assets. `public/manifest.webmanifest` provides standalone display metadata and install icons for mobile home screens.
@@ -92,7 +99,7 @@ Because rules do not import D3, a Canvas or WebGL renderer can consume the same 
 
 ## Testing strategy
 
-Unit tests cover state creation, horizontal and vertical world bounds, two-axis joystick diagonals, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, row-specific explosion recipes, enemy-shot and dive audio events, haptic patterns, and loss conditions. Recommended next layers are:
+Unit tests cover state creation, horizontal and vertical world bounds, two-axis joystick diagonals, cooldown behavior, Overdrive decay and weapon scaling, elite-diver scoring, formation reversal, level progression, touch regions, row-specific explosion recipes, enemy-shot and dive audio events, haptic patterns, leaderboard normalization/configuration, and loss conditions. Recommended next layers are:
 
 - Property tests for collision symmetry and world bounds
 - Browser tests for keyboard/touch interaction
